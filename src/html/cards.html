@@ -11,6 +11,7 @@
 
   <div class="main-content">
     <div class="progress">
+      <span class="round-label">Durchgang <span id="round">1</span></span>
       <span id="current">1</span> / <span id="total">0</span>
     </div>
 
@@ -20,7 +21,18 @@
       <div class="mode-text" id="modeText">Definition</div>
     </div>
 
-    <div class="container">
+    <div class="tally">
+      <div class="tally-item tally-unknown">
+        <span class="tally-count" id="unknownCount">0</span>
+        <span class="tally-label">Noch nicht gelernt</span>
+      </div>
+      <div class="tally-item tally-known">
+        <span class="tally-count" id="knownCount">0</span>
+        <span class="tally-label">Gelernt</span>
+      </div>
+    </div>
+
+    <div class="container" id="cardContainer">
       <div class="card card-left">
         <div class="card-content" id="term">Begriff</div>
       </div>
@@ -29,13 +41,42 @@
       </div>
     </div>
 
+    <div class="answer-buttons">
+      <button class="answer-btn answer-unknown" id="btnUnknown">← Noch nicht gelernt</button>
+      <button class="answer-btn answer-known" id="btnKnown">Gelernt →</button>
+    </div>
+
     <div class="instructions">
-      Drücke die <strong>Leertaste</strong> zum Aufdecken der Karte.
+      <strong>Leertaste</strong> aufdecken ·
+      <strong>←</strong> noch nicht gelernt ·
+      <strong>→</strong> gelernt
+    </div>
+  </div>
+
+  <div class="summary-overlay hidden" id="summary">
+    <div class="summary-box">
+      <h2 class="summary-title" id="summaryTitle">Zwischenstand</h2>
+      <p class="summary-subtitle" id="summarySubtitle"></p>
+      <div class="pie" id="pie">
+        <div class="pie-center">
+          <span class="pie-percent" id="piePercent">0%</span>
+          <span class="pie-caption">gelernt</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot dot-known"></span>Gelernt: <strong id="legendKnown">0</strong></div>
+        <div class="legend-item"><span class="legend-dot dot-unknown"></span>Noch nicht gelernt: <strong id="legendUnknown">0</strong></div>
+      </div>
+      <div class="summary-actions">
+        <button class="answer-btn answer-known" id="btnContinue">Weiter</button>
+        <a href="home.html" class="answer-btn answer-neutral hidden" id="btnHome">Zur Startseite</a>
+      </div>
+      <p class="summary-hint" id="summaryHint">Drücke <strong>Enter</strong> zum Fortfahren</p>
     </div>
   </div>
 
   <script src="../js/platform.js"></script>
-    <script src="../js/cards.js"></script>
+  <script src="../js/cards.js"></script>
 </body>
 
 </html>
