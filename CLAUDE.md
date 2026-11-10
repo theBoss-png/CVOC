@@ -18,6 +18,12 @@ Läuft als Electron-App und als statische Web-Version (Cloudflare).
 - `npm run deploy` – Web-Version bauen und auf Cloudflare hochladen
 - `npm run dist` – Mac-App bauen
 
+## Cloudflare
+
+- Für Cloudflare-Fragen das Cloudflare-Plugin (Skills + MCP-Server `https://mcp.cloudflare.com/mcp`) nutzen; es ist in `.claude/settings.json` aktiviert.
+- Das Projekt hat eine Wrangler-Konfiguration (`wrangler.jsonc`), also Wrangler verwenden, nicht die `cf`-CLI.
+- Worker-Name: `patient-bird-da50` (Cloudflare Workers mit statischen Assets aus `web/`).
+
 ## Git & GitHub
 
 Remote: `origin` → https://github.com/theBoss-png/CVOC, Branch `main`.

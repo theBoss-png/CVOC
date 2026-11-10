@@ -1,4 +1,15 @@
 {
+  "extraKnownMarketplaces": {
+    "cloudflare": {
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "cloudflare@cloudflare": true
+  },
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -11,6 +22,7 @@
       "Bash(git push origin main)",
       "Bash(git push)",
       "Bash(npm install)",
+      "Bash(npm ci)",
       "Bash(npm start)",
       "Bash(npm run build:web)"
     ],
