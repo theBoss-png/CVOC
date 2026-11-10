@@ -1,0 +1,37 @@
+{
+  "name": "cvoc",
+  "version": "0.1.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "build:web": "node build-web.js",
+    "deploy": "node build-web.js && npx wrangler deploy"
+  },
+  "build": {
+    "appId": "com.hubaldium.cvoc",
+    "productName": "CVOC",
+    "mac": {
+      "icon": "icon.icns",
+      "identity": null,
+      "gatekeeperAssess": false
+    },
+    "mas": {
+      "entitlements": "entitlements.mas.plist",
+      "entitlementsInherit": "entitlements.mas.inherit.plist"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^39.2.5",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "fzstd": "^0.1.1",
+    "pako": "^2.1.0",
+    "sql.js": "^1.13.0"
+  }
+}

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/lernen.css" />
+    <title>CVOC – Quiz</title>
+  </head>
+
+  <body>
+    <div class="finish-animation" id="finishAnimation"></div>
+
+    <div class="top-buttons">
+      <button class="back-btn" onclick="goBack()">← Zurück</button>
+      <button class="settings-btn" id="settingsBtn" title="Einstellungen">
+        <span class="gear">⚙</span>
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="progress">
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text">
+          Gelernt <span id="learned">0</span> von <span id="total">0</span>
+          <span class="bucket-info" id="bucketInfo"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="term" id="term">…</div>
+      </div>
+
+      <div class="input-container">
+        <input
+          type="text"
+          class="answer-input"
+          id="answerInput"
+          placeholder="Deine Antwort eingeben..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <button class="button check-btn" id="checkBtn" onclick="checkAnswer()">
+        Antworten
+      </button>
+
+      <button class="button next-btn" id="nextBtn" onclick="nextQuestion()">
+        Weiter
+      </button>
+
+      <button
+        class="button override-btn"
+        id="overrideBtn"
+        onclick="overrideAnswer()"
+      >
+        Meine Antwort war richtig
+      </button>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="auto-next-info" id="autoNextInfo"></div>
+    </div>
+
+    <!-- ===================== Einstellungen ===================== -->
+    <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-panel">
+        <div class="settings-header">
+          <div class="settings-title">Einstellungen</div>
+          <button class="settings-close" id="settingsClose">×</button>
+        </div>
+
+        <div class="settings-body">
+          <div class="settings-section">Abfrage</div>
+
+          <div class="setting-row">
+            <div class="setting-label">Abgefragt wird</div>
+            <div class="toggle-switch" data-toggle="questionFirst"></div>
+            <div class="setting-text" id="question_def">Definition</div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">Gross-/Kleinschreibung prüfen</div>
+            <div class="toggle-switch" data-toggle="checkCapitalized"></div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">Alle Lösungen verlangen</div>
+            <div class="toggle-switch" data-toggle="bothAnswers"></div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">(Klammern) ignorieren</div>
+            <div class="toggle-switch" data-toggle="removeParentheses"></div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">Automatisch weiter bei richtig</div>
+            <div class="toggle-switch" data-toggle="autoNext"></div>
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Wartezeit bis "weiter"</div>
+              <div class="setting-value" data-value-for="autoNextDelay"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="autoNextDelay"
+              data-suffix=" ms"
+              min="300"
+              max="3000"
+              step="100"
+            />
+          </div>
+
+          <div class="settings-section">Buckets</div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Bucket-Grösse</div>
+              <div class="setting-value" data-value-for="bucketSize"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="bucketSize"
+              data-suffix=" Wörter"
+              min="3"
+              max="40"
+              step="1"
+            />
+            <div class="setting-hint">
+              Wie viele Wörter gleichzeitig aktiv geübt werden. Ist eines
+              gelernt, rückt sofort ein neues nach.
+            </div>
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Richtige in Folge zum Bestehen</div>
+              <div class="setting-value" data-value-for="masteryStreak"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="masteryStreak"
+              data-suffix="×"
+              min="1"
+              max="5"
+              step="1"
+            />
+            <div class="setting-hint">
+              Ein Wort verlässt den Bucket erst, wenn es auf Bestwert steht
+              und so oft hintereinander richtig war.
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">Wörter mischen statt Reihenfolge</div>
+            <div class="toggle-switch" data-toggle="shufflePool"></div>
+          </div>
+
+          <div class="settings-section">Wahrscheinlichkeiten</div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Gewichtung der Fehler</div>
+              <div class="setting-value" data-value-for="weightExponent"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="weightExponent"
+              min="1"
+              max="5"
+              step="0.5"
+            />
+            <div class="setting-hint">
+              Exponent beim Würfeln. Höher = schlecht gekonnte Wörter kommen
+              deutlich häufiger dran.
+            </div>
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Mindestabstand</div>
+              <div class="setting-value" data-value-for="minGap"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="minGap"
+              data-suffix=" dazwischen"
+              min="0"
+              max="20"
+              step="1"
+            />
+            <div class="setting-hint">
+              So viele andere Wörter sollen zwischen zwei Wiederholungen
+              liegen. Direkt hintereinander kommt ein Wort nie.
+            </div>
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Härte des Abstands</div>
+              <div class="setting-value" data-value-for="recencyStrength"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="recencyStrength"
+              min="0"
+              max="5"
+              step="0.5"
+            />
+            <div class="setting-hint">
+              0 = Abstand egal, hoch = kürzlich gefragte Wörter werden fast
+              vollständig unterdrückt.
+            </div>
+          </div>
+
+          <div class="settings-section">Bewertung</div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Bestwert einer Karte</div>
+              <div class="setting-value" data-value-for="minAmount"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="minAmount"
+              min="1"
+              max="5"
+              step="1"
+            />
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Schlechtestwert einer Karte</div>
+              <div class="setting-value" data-value-for="maxAmount"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="maxAmount"
+              min="4"
+              max="15"
+              step="1"
+            />
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Abzug bei richtig</div>
+              <div class="setting-value" data-value-for="rightStep"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="rightStep"
+              min="1"
+              max="4"
+              step="1"
+            />
+          </div>
+
+          <div class="setting-row column">
+            <div class="setting-head">
+              <div class="setting-label">Zuschlag bei falsch</div>
+              <div class="setting-value" data-value-for="wrongStep"></div>
+            </div>
+            <input
+              type="range"
+              class="setting-range"
+              data-range="wrongStep"
+              min="1"
+              max="4"
+              step="1"
+            />
+          </div>
+
+          <div class="settings-section">Entwickler</div>
+
+          <div class="setting-row">
+            <div class="setting-label">Gewicht neben dem Wort anzeigen</div>
+            <div class="toggle-switch" data-toggle="showDebug"></div>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <button class="ghost-btn" id="btnDefaults">Standard</button>
+          <button class="reset-btn" id="btnResetProgress">
+            Fortschritt zurücksetzen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage"></div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">
+            Abbrechen
+          </button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/platform.js"></script>
+    <script src="../js/lernen.js"></script>
+  </body>
+</html>

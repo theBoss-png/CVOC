@@ -1,0 +1,107 @@
+/* CVOC – Quizlet-Import, Ergänzungen zu anki.css */
+
+.paste-area {
+  width: 100%;
+  min-height: 220px;
+  padding: 16px 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  border: none;
+  border-radius: 14px;
+  resize: vertical;
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  color: #e0e0e0;
+  box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 107, 53, 0.15);
+  tab-size: 8;
+}
+
+.paste-area:focus {
+  outline: none;
+  box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 0.55), 0 0 0 2px var(--orange-2);
+}
+
+.paste-area::placeholder {
+  color: #4f4f4f;
+}
+
+.paste-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.paste-actions .chip {
+  padding: 9px 16px;
+  font-size: 13px;
+}
+
+/* ---------------- Anleitung ---------------- */
+.howto {
+  background: linear-gradient(145deg, #161616, #1f1f1f);
+  border: 1px solid rgba(255, 107, 53, 0.18);
+  border-radius: 18px;
+  padding: 16px 22px;
+  margin-bottom: 20px;
+}
+
+.howto > summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--orange-2);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.howto > summary::-webkit-details-marker {
+  display: none;
+}
+
+.howto > summary::before {
+  content: "▸";
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.howto[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.howto-steps {
+  margin: 14px 0 0 20px;
+  padding: 0;
+  color: #c4c4c4;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.howto-steps strong {
+  color: #fff;
+}
+
+.howto-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #8a8a8a;
+}
+
+/* ---------------- Auswahllisten ---------------- */
+.field-select.wide {
+  width: 100%;
+}
+
+.opt-label.spaced {
+  margin-top: 12px;
+}
+
+#sepBlock {
+  transition: opacity 0.2s ease;
+}

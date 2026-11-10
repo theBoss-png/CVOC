@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/anki.css" />
+    <link rel="stylesheet" href="../css/quizlet.css" />
+    <title>CVOC – Quizlet importieren</title>
+  </head>
+
+  <body>
+    <div class="top-buttons">
+      <button class="back-btn" onclick="goBack()">← Zurück</button>
+    </div>
+
+    <div class="page">
+      <div class="page-head">
+        <div class="page-title">Quizlet importieren</div>
+        <div class="page-sub">
+          Text aus einem Quizlet-Set einfügen – die Trennzeichen erkennt CVOC selbst.
+        </div>
+      </div>
+
+      <!-- ============ Anleitung ============ -->
+      <details class="howto" id="howto" open>
+        <summary>So kommst du an den Text</summary>
+        <ol class="howto-steps">
+          <li>Das Set auf quizlet.com öffnen.</li>
+          <li>Oben rechts auf <strong>⋯</strong> klicken und <strong>Exportieren</strong> wählen.</li>
+          <li>
+            Trennzeichen stehen lassen (<strong>Tabulator</strong> zwischen Begriff und
+            Definition, <strong>Zeilenumbruch</strong> zwischen den Karten).
+          </li>
+          <li><strong>Text kopieren</strong> drücken und hier unten einfügen.</li>
+        </ol>
+        <div class="howto-note">
+          Quizlet bietet den Export nur für Sets an, die dir gehören. Bei einem fremden
+          Set kannst du es vorher in dein Konto kopieren – oder du markierst die Karten
+          auf der Seite und fügst sie einfach hier ein, CVOC kommt auch damit klar.
+        </div>
+      </details>
+
+      <!-- ============ Eingabe ============ -->
+      <section class="panel">
+        <div class="panel-title">
+          Text einfügen
+          <span class="count-badge" id="detectBadge">wartet auf Eingabe</span>
+        </div>
+        <textarea
+          id="input"
+          class="paste-area"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="accurate&#9;genau&#10;thorough&#9;gründlich&#10;reliable&#9;zuverlässig"
+        ></textarea>
+        <div class="paste-actions">
+          <button class="chip" id="btnFile">Aus Datei laden (.txt, .csv)</button>
+          <button class="chip" id="btnExample">Beispiel einfügen</button>
+          <button class="chip" id="btnClear">Leeren</button>
+        </div>
+      </section>
+
+      <!-- ============ Optionen ============ -->
+      <section class="panel" id="optionsPanel" hidden>
+        <div class="panel-title">Aufteilung</div>
+
+        <div class="opt-grid">
+          <div class="opt-block">
+            <div class="opt-label">Aufbau</div>
+            <label class="radio"
+              ><input type="radio" name="mode" value="separator" checked /><span
+                >Begriff und Definition in einer Zeile</span
+              ></label
+            >
+            <label class="radio"
+              ><input type="radio" name="mode" value="alternating" /><span
+                >Zeilen wechseln sich ab</span
+              ></label
+            >
+            <div class="opt-hint" id="modeHint"></div>
+          </div>
+
+          <div class="opt-block" id="sepBlock">
+            <div class="opt-label">Zwischen Begriff und Definition</div>
+            <select class="field-select wide" id="termSep"></select>
+
+            <div class="opt-label spaced">Zwischen den Karten</div>
+            <select class="field-select wide" id="cardSep"></select>
+          </div>
+
+          <div class="opt-block">
+            <div class="opt-label">Feinschliff</div>
+            <label class="check"
+              ><input type="checkbox" id="swap" /><span
+                >Begriff und Definition tauschen</span
+              ></label
+            >
+            <label class="check"
+              ><input type="checkbox" id="stripIpa" checked /><span
+                >Lautschrift entfernen <span class="opt-example">/ˈækjərət/</span></span
+              ></label
+            >
+            <label class="check"
+              ><input type="checkbox" id="stripNumbering" checked /><span
+                >Nummerierung am Zeilenanfang entfernen</span
+              ></label
+            >
+            <label class="check"
+              ><input type="checkbox" id="dedupe" checked /><span
+                >Doppelte Karten entfernen</span
+              ></label
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Vorschau ============ -->
+      <section class="panel" id="previewPanel" hidden>
+        <div class="panel-title">
+          Vorschau <span class="count-badge" id="cardCount">0 Karten</span>
+        </div>
+        <div class="skipped" id="skipped"></div>
+        <div class="preview" id="preview"></div>
+      </section>
+
+      <div class="create-row" id="createRow" hidden>
+        <input
+          type="text"
+          class="name-input"
+          id="setName"
+          placeholder="Name des Lernsets"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="btn-primary" id="btnCreate">Lernset erstellen</button>
+      </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage"></div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">
+            Abbrechen
+          </button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/text-clean.js"></script>
+    <script src="../js/quizlet.js"></script>
+    <script src="../js/platform.js"></script>
+    <script src="../js/quizlet-import.js"></script>
+  </body>
+</html>

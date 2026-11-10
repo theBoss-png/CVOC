@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/anki.css" />
+    <title>CVOC – Anki importieren</title>
+  </head>
+
+  <body>
+    <div class="top-buttons">
+      <button class="back-btn" onclick="goBack()">← Zurück</button>
+    </div>
+
+    <div class="page">
+      <div class="page-head">
+        <div class="page-title">Anki importieren</div>
+        <div class="page-sub">
+          Ein .apkg auswählen, nach Tags filtern und daraus ein CVOC-Lernset machen.
+        </div>
+      </div>
+
+      <!-- ============ Schritt 1: Datei ============ -->
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">📦</div>
+        <div class="dropzone-title">.apkg hierher ziehen</div>
+        <div class="dropzone-sub">oder klicken, um eine Datei zu wählen</div>
+      </div>
+
+      <div class="loading" id="loading" hidden>Datei wird gelesen …</div>
+
+      <!-- ============ Schritt 2: Optionen ============ -->
+      <div id="importBody" hidden>
+        <div class="file-bar">
+          <div class="file-info">
+            <div class="file-name" id="fileName">–</div>
+            <div class="file-meta" id="fileMeta"></div>
+          </div>
+          <button class="ghost-btn" id="btnChangeFile">Andere Datei</button>
+        </div>
+
+        <div class="cols">
+          <!-- ---- Tags ---- -->
+          <section class="panel">
+            <div class="panel-title">Tags</div>
+            <input
+              type="text"
+              class="search"
+              id="tagSearch"
+              placeholder="Tag suchen …"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <div class="chip-row">
+              <button class="chip" id="tagsAll">Alle</button>
+              <button class="chip" id="tagsNone">Keine</button>
+            </div>
+            <div class="tag-list" id="tagList"></div>
+            <div class="tag-empty" id="tagEmpty" hidden>
+              Dieser Stapel hat keine Tags.
+            </div>
+
+            <div class="opt-block">
+              <div class="opt-label">Bei mehreren gewählten Tags</div>
+              <label class="radio"
+                ><input type="radio" name="tagMode" value="any" checked /><span
+                  >Notiz hat mindestens einen davon</span
+                ></label
+              >
+              <label class="radio"
+                ><input type="radio" name="tagMode" value="all" /><span
+                  >Notiz hat alle davon</span
+                ></label
+              >
+              <label class="check"
+                ><input type="checkbox" id="includeUntagged" checked /><span
+                  >Notizen ohne Tags mitnehmen</span
+                ></label
+              >
+            </div>
+          </section>
+
+          <!-- ---- Notiztypen ---- -->
+          <section class="panel">
+            <div class="panel-title">Notiztypen</div>
+            <div class="panel-hint">
+              Pro Notiztyp festlegen, ob und wie er umgewandelt wird.
+            </div>
+            <div id="notetypeList"></div>
+          </section>
+        </div>
+
+        <!-- ---- Umwandlung ---- -->
+        <section class="panel">
+          <div class="panel-title">Umwandlung</div>
+
+          <div class="opt-grid">
+            <div class="opt-block">
+              <div class="opt-label">Richtung bei Lückentexten</div>
+              <label class="radio"
+                ><input type="radio" name="swap" value="1" checked /><span
+                  >Begriff = Lückentext, Definition = Wort</span
+                ></label
+              >
+              <label class="radio"
+                ><input type="radio" name="swap" value="0" /><span
+                  >Begriff = Wort, Definition = Lückentext</span
+                ></label
+              >
+              <div class="opt-hint" id="swapHint"></div>
+            </div>
+
+            <div class="opt-block">
+              <div class="opt-label">Mehrere Lücken in einem Satz</div>
+              <label class="radio"
+                ><input type="radio" name="clozeMode" value="per" checked /><span
+                  >Eine Karte pro Lücke (wie Anki)</span
+                ></label
+              >
+              <label class="radio"
+                ><input type="radio" name="clozeMode" value="all" /><span
+                  >Eine Karte, alle Lücken leer</span
+                ></label
+              >
+            </div>
+
+            <div class="opt-block">
+              <div class="opt-label">Feinschliff</div>
+              <label class="check"
+                ><input type="checkbox" id="stripHtml" checked /><span
+                  >HTML und Medien entfernen</span
+                ></label
+              >
+              <label class="check"
+                ><input type="checkbox" id="stripIpa" checked /><span
+                  >Lautschrift entfernen <span class="opt-example">/ˈækjərət/</span></span
+                ></label
+              >
+              <label class="check"
+                ><input type="checkbox" id="showHints" checked /><span
+                  >Anki-Hinweise in Klammern zeigen</span
+                ></label
+              >
+              <label class="check"
+                ><input type="checkbox" id="dedupe" checked /><span
+                  >Doppelte Karten entfernen</span
+                ></label
+              >
+              <label class="inline-field"
+                ><span>Lückenzeichen</span
+                ><input
+                  type="text"
+                  id="blank"
+                  value="___"
+                  maxlength="12"
+                  autocomplete="off"
+                  spellcheck="false"
+              /></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- Vorschau ---- -->
+        <section class="panel">
+          <div class="panel-title">
+            Vorschau <span class="count-badge" id="cardCount">0 Karten</span>
+          </div>
+          <div class="skipped" id="skipped"></div>
+          <div class="preview" id="preview"></div>
+        </section>
+
+        <div class="create-row">
+          <input
+            type="text"
+            class="name-input"
+            id="setName"
+            placeholder="Name des Lernsets"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="btn-primary" id="btnCreate">Lernset erstellen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage"></div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">
+            Abbrechen
+          </button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/platform.js"></script>
+    <script src="../js/anki-import.js"></script>
+  </body>
+</html>

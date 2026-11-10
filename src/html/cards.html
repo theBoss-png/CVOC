@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/cards.css">
+    <title>Lernkarten</title>
+  </head>
+<body>
+  <a href="home.html" class="back-btn">← Zurück</a>
+
+  <div class="main-content">
+    <div class="progress">
+      <span id="current">1</span> / <span id="total">0</span>
+    </div>
+
+    <div class="mode-toggle">
+      <div class="mode-label">Modus</div>
+      <div class="toggle-switch" id="modeToggle"></div>
+      <div class="mode-text" id="modeText">Definition</div>
+    </div>
+
+    <div class="container">
+      <div class="card card-left">
+        <div class="card-content" id="term">Begriff</div>
+      </div>
+      <div class="card card-right hidden" id="definitionCard">
+        <div class="card-content" id="definition">Definition</div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      Drücke die <strong>Leertaste</strong> zum Aufdecken der Karte.
+    </div>
+  </div>
+
+  <script src="../js/platform.js"></script>
+    <script src="../js/cards.js"></script>
+</body>
+
+</html>

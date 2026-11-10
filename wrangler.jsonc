@@ -1,0 +1,9 @@
+{
+  // CVOC – Web-Version als statische Seite auf Cloudflare Workers.
+  // Deploy: npm run deploy  (baut web/ neu und lädt es hoch)
+  "name": "patient-bird-da50",
+  "compatibility_date": "2026-09-09",
+  "assets": {
+    "directory": "./web"
+  }
+}

@@ -1,0 +1,21 @@
+# Abhängigkeiten
+node_modules/
+
+# Generiert von build-web.js (npm run build:web)
+web/
+cvoc-web.zip
+
+# Electron-Builder-Ausgabe
+dist/
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# Lokales Claude-Code-Setup (persönlich, nicht teilen)
+.claude/settings.local.json
+
+# System
+.DS_Store
+*.log
+_transfer.tgz

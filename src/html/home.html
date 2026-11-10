@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/home.css">
+    <title>CVOC – Lern-App</title>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="container">
+        <div class="title">
+          <div class="loader">
+            <svg height="0" width="0" viewBox="0 0 64 64" class="absolute">
+              <defs xmlns="http://www.w3.org/2000/svg">
+                <linearGradient
+                  gradientUnits="userSpaceOnUse"
+                  y2="2"
+                  x2="0"
+                  y1="62"
+                  x1="0"
+                  id="gradient1"
+                >
+                  <stop stop-color="#973BED"></stop>
+                  <stop stop-color="#007CFF" offset="1"></stop>
+                </linearGradient>
+                <linearGradient
+                  gradientUnits="userSpaceOnUse"
+                  y2="0"
+                  x2="0"
+                  y1="64"
+                  x1="0"
+                  id="gradient2"
+                >
+                  <stop stop-color="#FFC800"></stop>
+                  <stop stop-color="#F0F" offset="1"></stop>
+                  <animateTransform
+                    repeatCount="indefinite"
+                    keySplines=".42,0,.58,1;.42,0,.58,1"
+                    keyTimes="0; 0.5; 1"
+                    dur="4s"
+                    values="0 32 32;-540 32 32;-1080 32 32"
+                    type="rotate"
+                    attributeName="gradientTransform"
+                  ></animateTransform>
+                </linearGradient>
+                <linearGradient
+                  gradientUnits="userSpaceOnUse"
+                  y2="2"
+                  x2="0"
+                  y1="62"
+                  x1="0"
+                  id="gradient3"
+                >
+                  <stop stop-color="#00E0ED"></stop>
+                  <stop stop-color="#00DA72" offset="1"></stop>
+                </linearGradient>
+                <linearGradient
+                  gradientUnits="userSpaceOnUse"
+                  y2="0"
+                  x2="0"
+                  y1="64"
+                  x1="0"
+                  id="gradient4"
+                >
+                  <stop stop-color="#FF4C00"></stop>
+                  <stop stop-color="#FFCD00" offset="1"></stop>
+                  <animateTransform
+                    repeatCount="indefinite"
+                    keySplines=".42,0,.58,1;.42,0,.58,1"
+                    keyTimes="0; 0.5; 1"
+                    dur="4s"
+                    values="0 32 32;-540 32 32;-1080 32 32"
+                    type="rotate"
+                    attributeName="gradientTransform"
+                  ></animateTransform>
+                </linearGradient>
+              </defs>
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 64 64"
+              height="64"
+              width="64"
+              class="inline-block"
+            >
+              <path
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                stroke-width="8"
+                stroke="url(#gradient1)"
+                d="M 51.75,40 A 21.5,21.5 0 0 1 32,53.5 21.5,21.5 0 0 1 10.5,32 21.5,21.5 0 0 1 32,10.5 21.5,21.5 0 0 1 48,18"
+                class="dash"
+                pathLength="360"
+              ></path>
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 64 64"
+              height="64"
+              width="64"
+              class="inline-block"
+            >
+              <path
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                stroke-width="8"
+                stroke="url(#gradient2)"
+                d="M 10,10 L 32,54 L 54,10"
+                class="dash"
+                pathLength="360"
+              ></path>
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 64 64"
+              height="64"
+              width="64"
+              class="inline-block"
+            >
+              <path
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                stroke-width="8"
+                stroke="url(#gradient4)"
+                d="M 50,20 A 21.5,21.5 0 0 1 53.5,32 A 21.5,21.5 0 0 1 32,53.5 21.5,21.5 0 0 1 10.5,32 21.5,21.5 0 0 1 32,10.5 21.5,21.5 0 0 1 50,20"
+                class="dash"
+                pathLength="360"
+              ></path>
+            </svg>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 64 64"
+              height="64"
+              width="64"
+              class="inline-block"
+            >
+              <path
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                stroke-width="8"
+                stroke="url(#gradient3)"
+                d="M 51.75,40 A 21.5,21.5 0 0 1 32,53.5 21.5,21.5 0 0 1 10.5,32 21.5,21.5 0 0 1 32,10.5 21.5,21.5 0 0 1 48,18"
+                class="dash"
+                pathLength="360"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <input
+            type="text"
+            id="text-input"
+            class="text-input"
+            placeholder="CVOC Lernset hier..."
+          />
+        </div>
+
+        <button class="btn" id="btnStart">Lernen</button>
+        <button class="btn" id="btnCards">Karteikarten</button>
+        <button class="btn btn-secondary" id="btnCreate">Erstellen</button>
+        <button class="btn btn-secondary" id="btnAnki">Anki importieren</button>
+        <button class="btn btn-secondary" id="btnQuizlet">Quizlet importieren</button>
+      </div>
+
+      <div class="quiz-info-card" id="quizInfoCard">
+        <div class="quiz-info-left">
+          <div class="quiz-info-name" id="quizInfoName">Quiz Name</div>
+          <div class="quiz-info-meta" id="quizInfoMeta">0 Wörter</div>
+        </div>
+        <div class="quiz-info-right">
+          <label class="clipboard-toggle" id="copyBtn">
+            <svg
+              viewBox="0 0 384 512"
+              height="1em"
+              xmlns="http://www.w3.org/2000/svg"
+              class="clipboard"
+            >
+              <path
+                d="M280 64h40c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128C0 92.7 28.7 64 64 64h40 9.6C121 27.5 153.3 0 192 0s71 27.5 78.4 64H280zM64 112c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H304v24c0 13.3-10.7 24-24 24H192 104c-13.3 0-24-10.7-24-24V112H64zm128-8a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"
+              ></path>
+            </svg>
+            <svg
+              viewBox="0 0 384 512"
+              height="1em"
+              xmlns="http://www.w3.org/2000/svg"
+              class="clipboard-check"
+            >
+              <path
+                d="M192 0c-41.8 0-77.4 26.7-90.5 64H64C28.7 64 0 92.7 0 128V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64H282.5C269.4 26.7 233.8 0 192 0zm0 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM305 273L177 401c-9.4 9.4-24.6 9.4-33.9 0L79 337c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L271 239c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"
+              ></path>
+            </svg>
+          </label>
+          <button class="btn-small btn-save" id="btnSave" style="display: none">
+            Save
+          </button>
+          <button
+            class="btn-small btn-delete"
+            id="btnDelete"
+            style="display: none"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-sidebar" id="quizSidebar">
+      <div class="quiz-list-title">CVOC Lernsets</div>
+      <div id="quizList"></div>
+    </div>
+
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage">
+          Dies ist eine Warnmeldung
+        </div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">
+            Abbrechen
+          </button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="versionInfo" class="version-info"></div>
+    <script src="../../node_modules/pako/dist/pako.min.js"></script>
+    <script src="../js/platform.js"></script>
+    <script src="../js/home.js"></script>
+  </body>
+</html>

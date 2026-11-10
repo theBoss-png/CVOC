@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/create.css">
+    <title>CVOC – Lernset erstellen</title>
+  </head>
+
+  <body>
+    <div class="header">
+      <a href="home.html" class="back-btn">← Zurück</a>
+      <div class="header-title">Neues Lernset erstellen</div>
+      <button class="back-btn" onclick="switchAllCards()" title="Alle Begriffe und Definitionen tauschen">⇄ Tauschen</button>
+    </div>
+
+    <div class="container">
+      <div class="set-info">
+        <div class="input-group">
+          <label class="input-label">Titel</label>
+          <input
+            type="text"
+            class="text-input"
+            id="setTitle"
+            placeholder="Neues Lernset"
+          />
+        </div>
+      </div>
+
+      <div class="cards-container" id="cardsContainer">
+        <div class="cards-header">
+          <div></div>
+          <div class="cards-header-label">Begriff</div>
+          <div class="cards-header-label">Definition</div>
+          <div></div>
+        </div>
+
+        <div class="card" data-card-index="0">
+          <span class="card-number">1</span>
+          <div class="card-inputs">
+            <div class="card-input-group">
+              <label class="input-label">Begriff</label>
+              <input
+                type="text"
+                class="card-input"
+                placeholder="Begriff eingeben"
+              />
+            </div>
+            <div class="card-input-group">
+              <label class="input-label">Definition</label>
+              <input
+                type="text"
+                class="card-input"
+                placeholder="Definition eingeben"
+              />
+            </div>
+          </div>
+          <button class="delete-card-btn" onclick="deleteCard(1)">×</button>
+        </div>
+
+        <div class="card" data-card-index="1">
+          <span class="card-number">2</span>
+          <div class="card-inputs">
+            <div class="card-input-group">
+              <label class="input-label">Begriff</label>
+              <input
+                type="text"
+                class="card-input"
+                placeholder="Definition eingeben"
+              />
+            </div>
+            <div class="card-input-group">
+              <label class="input-label">Definition</label>
+              <input
+                type="text"
+                class="card-input"
+                placeholder="Definition eingeben"
+              />
+            </div>
+          </div>
+          <button class="delete-card-btn" onclick="deleteCard(1)">×</button>
+        </div>
+      </div>
+
+      <button class="add-card-btn" onclick="addCard()">
+        + Karte hinzufügen
+      </button>
+
+      <div class="action-buttons">
+        <button id="btnErstellen" class="btn btn-primary" onclick="createSet()">
+          Lernset erstellen
+        </button>
+      </div>
+    </div>
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage">
+          Dies ist eine Warnmeldung
+        </div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">
+            Abbrechen
+          </button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">
+            Bestätigen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/platform.js"></script>
+    <script src="../js/create.js"></script>
+  </body>
+</html>
