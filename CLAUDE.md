@@ -27,4 +27,5 @@ Remote: `origin` → https://github.com/theBoss-png/CVOC, Branch `main`.
 - Commit-Messages kurz, auf Deutsch, im Imperativ (z. B. „Anki-Import: Medien überspringen“).
 - Nie committen: `node_modules/`, `web/`, `cvoc-web.zip`, `.wrangler/`, Secrets oder API-Tokens.
 - Kein `git push --force`, kein Umschreiben der History auf `main`.
-- `npm run deploy` nur ausführen, wenn ausdrücklich verlangt.
+- Jeder Push auf `main` deployt die Web-Version automatisch über GitHub Actions (`.github/workflows/deploy.yml`) zu Cloudflare. Deshalb nur funktionierenden Code pushen; vorher `npm run build:web` laufen lassen.
+- `npm run deploy` (manueller Deploy) nur ausführen, wenn ausdrücklich verlangt.
