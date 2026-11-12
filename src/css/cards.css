@@ -748,3 +748,55 @@ body {
     flex: 1;
   }
 }
+
+/* ----------------- Handy: Seite fixieren ----------------- */
+/* Kein Scrollen und kein Verrutschen beim Wischen: die Seite ist genau
+   so hoch wie der sichtbare Bereich, die Karten teilen sich den Platz. */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    height: 100vh; /* Fallback für ältere Browser */
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .main-content {
+    flex: 1;
+    min-height: 0;
+    justify-content: flex-start;
+  }
+
+  .tally {
+    flex: 0 0 auto;
+  }
+
+  .container {
+    flex: 1;
+    min-height: 0;
+    touch-action: none; /* Seite scrollt hier eh nicht – Wischen gehört ganz der Karte */
+  }
+
+  .card {
+    flex: 1;
+    min-height: 0;
+    padding: 16px 20px;
+  }
+
+  .answer-buttons {
+    flex: 0 0 auto;
+    margin: 14px 0 8px;
+  }
+
+  .swipe-hint {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+}
