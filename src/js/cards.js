@@ -202,7 +202,84 @@ modeToggle.addEventListener("click", toggleMode);
 btnKnown.addEventListener("click", () => answer(true));
 btnUnknown.addEventListener("click", () => answer(false));
 btnContinue.addEventListener("click", continueFromSummary);
-definitionCard.addEventListener("click", () => { if (!summaryOpen) toggleReveal(); });
+definitionCard.addEventListener("click", () => {
+  if (suppressClick) { suppressClick = false; return; }
+  if (!summaryOpen) toggleReveal();
+});
+
+// ----------------- Wischen (nur Touch) -----------------
+// Rechts = gelernt, links = noch nicht gelernt. Die Maus bleibt
+// unberührt, damit sich am Computer nichts ändert.
+const SWIPE_THRESHOLD = 80; // px, ab hier zählt das Loslassen als Antwort
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeDx = 0;
+let swipePointer = null;
+let swipeHorizontal = null; // null = Richtung noch unklar
+let suppressClick = false;
+
+function setSwipeVisual(dx) {
+  cardContainer.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
+  const strength = Math.min(Math.abs(dx) / SWIPE_THRESHOLD, 1);
+  cardContainer.style.setProperty("--swipe-strength", strength);
+  cardContainer.classList.toggle("dragging-right", dx > 0);
+  cardContainer.classList.toggle("dragging-left", dx < 0);
+}
+
+function resetSwipeVisual() {
+  cardContainer.classList.remove("dragging", "dragging-right", "dragging-left");
+  cardContainer.style.transform = "";
+  cardContainer.style.removeProperty("--swipe-strength");
+}
+
+cardContainer.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "touch" || isAnimating || summaryOpen || finished) return;
+  swipePointer = e.pointerId;
+  swipeStartX = e.clientX;
+  swipeStartY = e.clientY;
+  swipeDx = 0;
+  swipeHorizontal = null;
+});
+
+cardContainer.addEventListener("pointermove", (e) => {
+  if (e.pointerId !== swipePointer) return;
+  const dx = e.clientX - swipeStartX;
+  const dy = e.clientY - swipeStartY;
+
+  if (swipeHorizontal === null) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    swipeHorizontal = Math.abs(dx) > Math.abs(dy);
+    if (!swipeHorizontal) { swipePointer = null; return; } // senkrecht = scrollen
+    cardContainer.classList.add("dragging");
+  }
+
+  swipeDx = dx;
+  setSwipeVisual(dx);
+});
+
+function endSwipe(e) {
+  if (e.pointerId !== swipePointer) return;
+  swipePointer = null;
+  if (!swipeHorizontal) return;
+
+  suppressClick = true; // kein "Aufdecken" nach einer Wischbewegung
+  setTimeout(() => { suppressClick = false; }, 350);
+
+  const dx = swipeDx;
+  cardContainer.classList.remove("dragging");
+  if (e.type === "pointerup" && Math.abs(dx) >= SWIPE_THRESHOLD) {
+    // Von der aktuellen Position aus wegfliegen lassen
+    cardContainer.style.transform = "";
+    cardContainer.classList.remove("dragging-right", "dragging-left");
+    cardContainer.style.removeProperty("--swipe-strength");
+    answer(dx > 0);
+  } else {
+    resetSwipeVisual(); // zurückschnappen
+  }
+}
+
+cardContainer.addEventListener("pointerup", endSwipe);
+cardContainer.addEventListener("pointercancel", endSwipe);
 
 document.addEventListener("keydown", (e) => {
   if (summaryOpen) {

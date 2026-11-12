@@ -665,3 +665,46 @@ body {
     padding: 28px 20px;
   }
 }
+
+/* ----------------- Wischen (Touch) ----------------- */
+.container {
+  touch-action: pan-y; /* senkrecht scrollen erlaubt, waagerecht wischen wir selbst */
+}
+
+.container.dragging {
+  transition: none;
+}
+
+.container.dragging-right .card {
+  border-color: rgba(76, 208, 125, calc(0.15 + 0.85 * var(--swipe-strength, 0)));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 calc(40px * var(--swipe-strength, 0)) rgba(76, 208, 125, 0.5);
+}
+
+.container.dragging-left .card {
+  border-color: rgba(255, 90, 90, calc(0.15 + 0.85 * var(--swipe-strength, 0)));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 calc(40px * var(--swipe-strength, 0)) rgba(255, 90, 90, 0.5);
+}
+
+.swipe-hint {
+  display: none;
+  font-size: 13px;
+  color: #8a8a8a;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.hint-left {
+  color: var(--unknown);
+}
+
+.hint-right {
+  color: var(--known);
+}
+
+@media (max-width: 768px) and (hover: none) {
+  .swipe-hint {
+    display: block;
+  }
+}
