@@ -48,6 +48,7 @@ let isAnimating = false;
 let summaryOpen = false;
 let finished = false;
 let askForDefinition = true; // Standard: Nach Definition fragen
+let history = [];            // Antworten im aktuellen Durchgang, für "Rückgängig"
 
 // ----------------- DOM Elemente -----------------
 const termElement = document.getElementById("term");
@@ -63,6 +64,8 @@ const modeToggle = document.getElementById("modeToggle");
 const modeText = document.getElementById("modeText");
 const btnKnown = document.getElementById("btnKnown");
 const btnUnknown = document.getElementById("btnUnknown");
+const btnUndo = document.getElementById("btnUndo");
+const btnSummaryUndo = document.getElementById("btnSummaryUndo");
 
 const summary = document.getElementById("summary");
 const summaryTitle = document.getElementById("summaryTitle");
@@ -86,6 +89,7 @@ function updateCounters() {
   currentElement.textContent = Math.min(currentIndex + 1, deck.length);
   knownCountElement.textContent = knownTotal;
   unknownCountElement.textContent = unknownCards.length;
+  btnUndo.disabled = history.length === 0;
 }
 
 function showCard() {
@@ -119,6 +123,7 @@ function answer(known) {
   const card = deck[currentIndex];
   if (known) knownTotal++;
   else unknownCards.push(card);
+  history.push(known);
   updateCounters();
 
   const cls = known ? "swipe-right" : "swipe-left";
@@ -134,6 +139,31 @@ function answer(known) {
       showCard();
     }
   }, 280);
+}
+
+// Letzte Einordnung zurücknehmen: Karte kommt wieder auf den Stapel
+function undo() {
+  if (isAnimating || history.length === 0) return;
+
+  if (summaryOpen) {
+    summary.classList.add("hidden");
+    summaryOpen = false;
+    finished = false;
+  }
+
+  const known = history.pop();
+  if (known) knownTotal--;
+  else unknownCards.pop();
+  currentIndex--;
+  showCard();
+
+  // Karte von der Seite zurückfliegen lassen, auf die sie geschoben wurde
+  const cls = known ? "swipe-right" : "swipe-left";
+  isAnimating = true;
+  cardContainer.classList.add("no-transition", cls);
+  void cardContainer.offsetWidth; // Startposition übernehmen
+  cardContainer.classList.remove("no-transition", cls);
+  setTimeout(() => { isAnimating = false; }, 280);
 }
 
 function showSummary() {
@@ -186,6 +216,7 @@ function continueFromSummary() {
     deck = shuffle(unknownCards.slice());
   }
   unknownCards = [];
+  history = [];
   currentIndex = 0;
   showCard();
 }
@@ -202,6 +233,8 @@ modeToggle.addEventListener("click", toggleMode);
 btnKnown.addEventListener("click", () => answer(true));
 btnUnknown.addEventListener("click", () => answer(false));
 btnContinue.addEventListener("click", continueFromSummary);
+btnUndo.addEventListener("click", undo);
+btnSummaryUndo.addEventListener("click", undo);
 definitionCard.addEventListener("click", () => {
   if (suppressClick) { suppressClick = false; return; }
   if (!summaryOpen) toggleReveal();
@@ -282,6 +315,13 @@ cardContainer.addEventListener("pointerup", endSwipe);
 cardContainer.addEventListener("pointercancel", endSwipe);
 
 document.addEventListener("keydown", (e) => {
+  // Rückgängig: Backspace oder Cmd/Ctrl+Z
+  if (e.code === "Backspace" || ((e.metaKey || e.ctrlKey) && e.code === "KeyZ")) {
+    e.preventDefault();
+    undo();
+    return;
+  }
+
   if (summaryOpen) {
     if (e.code === "Enter" || e.code === "Space" || e.code === "NumpadEnter") {
       e.preventDefault();

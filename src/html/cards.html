@@ -43,6 +43,7 @@
 
     <div class="answer-buttons">
       <button class="answer-btn answer-unknown" id="btnUnknown">← Noch nicht gelernt</button>
+      <button class="answer-btn answer-undo" id="btnUndo" title="Letzte Karte zurück auf den Stapel (Backspace)" aria-label="Rückgängig" disabled><span class="undo-icon">↶</span><span class="undo-text"> Rückgängig</span></button>
       <button class="answer-btn answer-known" id="btnKnown">Gelernt →</button>
     </div>
 
@@ -54,7 +55,8 @@
     <div class="instructions">
       <strong>Leertaste</strong> aufdecken ·
       <strong>←</strong> noch nicht gelernt ·
-      <strong>→</strong> gelernt
+      <strong>→</strong> gelernt ·
+      <strong>Backspace</strong> rückgängig
     </div>
   </div>
 
@@ -75,6 +77,7 @@
       <div class="summary-actions">
         <button class="answer-btn answer-known" id="btnContinue">Weiter</button>
         <a href="home.html" class="answer-btn answer-neutral hidden" id="btnHome">Zur Startseite</a>
+        <button class="answer-btn answer-undo" id="btnSummaryUndo">↶ Letzte Karte zurück</button>
       </div>
       <p class="summary-hint" id="summaryHint">Drücke <strong>Enter</strong> zum Fortfahren</p>
     </div>
