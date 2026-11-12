@@ -566,3 +566,102 @@ body {
     display: none;
   }
 }
+
+/* ----------------- Handy ----------------- */
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+
+  .main-content {
+    min-height: auto;
+    padding: 0;
+  }
+
+  .back-btn {
+    top: 16px;
+    left: 16px;
+    padding: 10px 18px;
+    font-size: 15px;
+  }
+
+  .progress {
+    position: absolute;
+    top: 16px;
+    left: auto;
+    right: 16px;
+    transform: none;
+    padding: 10px 18px;
+    font-size: 15px;
+  }
+
+  .mode-toggle {
+    position: absolute;
+    top: 76px;
+    left: 16px;
+    right: 16px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    gap: 12px;
+  }
+
+  .mode-text {
+    min-width: 0;
+    text-align: right;
+  }
+
+  .tally {
+    margin: 140px 0 14px;
+    gap: 10px;
+  }
+
+  .tally-item {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .tally-count {
+    font-size: 18px;
+  }
+
+  .container {
+    gap: 14px;
+  }
+
+  .card {
+    min-height: 190px;
+    padding: 28px 20px;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+
+  .card-content {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .card-right.hidden::after {
+    font-size: 80px;
+  }
+
+  .answer-buttons {
+    width: 100%;
+    margin: 18px 0 20px;
+  }
+
+  .answer-btn {
+    flex: 1;
+  }
+
+  .summary-overlay {
+    padding: 12px;
+  }
+
+  .summary-box {
+    padding: 28px 20px;
+  }
+}

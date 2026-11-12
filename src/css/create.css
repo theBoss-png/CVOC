@@ -681,3 +681,53 @@ body {
     width: 100%;
   }
 }
+
+/* ----------------- Handy ----------------- */
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+
+  .header {
+    padding-top: 12px;
+    margin-bottom: 24px;
+  }
+
+  .header-title {
+    font-size: 30px;
+  }
+
+  .container {
+    padding: 22px 14px;
+    border-radius: 24px;
+  }
+
+  .set-info {
+    margin-bottom: 24px;
+  }
+
+  /* Spaltenüberschriften passen nicht zur einspaltigen Ansicht */
+  .cards-header {
+    display: none;
+  }
+
+  .card {
+    padding: 14px;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+
+  .card-number {
+    min-width: 20px;
+    font-size: 16px;
+  }
+
+  .card-inputs {
+    gap: 10px;
+    min-width: 0;
+  }
+}

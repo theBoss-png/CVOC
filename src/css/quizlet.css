@@ -105,3 +105,10 @@
 #sepBlock {
   transition: opacity 0.2s ease;
 }
+
+/* ----------------- Handy ----------------- */
+@media (max-width: 768px) {
+  textarea {
+    font-size: 16px !important;
+  }
+}

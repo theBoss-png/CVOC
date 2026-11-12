@@ -69,8 +69,217 @@
     <div class="settings-overlay" id="settingsOverlay">
       <div class="settings-panel">
         <div class="settings-header">
-          <div class="settings-title">Einstellungen</div>
-          <button class="settings-close" id="settingsClose">×</button>
+          <div class="settings-title" id="settingsTitle">Einstellungen</div>
+          <div class="settings-header-actions">
+            <button class="settings-help-btn" id="settingsHelpBtn" title="Erklärung der Einstellungen">?</button>
+            <button class="settings-close" id="settingsClose">×</button>
+          </div>
+        </div>
+
+        <!-- Erklärung aller Einstellungen -->
+        <div class="settings-help" id="settingsHelp">
+          <p class="help-intro">
+            So funktioniert das Lernen in CVOC – und was jede Einstellung
+            bewirkt. Alle Einstellungen werden sofort gespeichert und gelten
+            für alle Lernsets.
+          </p>
+
+          <div class="help-block">
+            <div class="help-heading">Das Prinzip in Kürze</div>
+            <p>
+              Jede Karte hat einen <b>Wert</b>. Neue Karten starten bei 5.
+              Je <b>niedriger</b> der Wert, desto besser kannst du die Karte.
+              Richtig senkt den Wert, falsch erhöht ihn. Karten mit hohem Wert
+              kommen häufiger dran.
+            </p>
+            <p>
+              Geübt wird nicht das ganze Set auf einmal, sondern ein kleiner
+              <b>Bucket</b> (eine Gruppe) von Wörtern. Hast du ein Wort gelernt,
+              verlässt es den Bucket und das nächste rückt nach.
+            </p>
+          </div>
+
+          <div class="help-section">Abfrage</div>
+
+          <div class="help-block">
+            <div class="help-heading">Abgefragt wird</div>
+            <p>
+              Legt fest, was du eintippen musst. Bei <b>Definition</b> siehst du
+              den Begriff und schreibst die Definition, bei <b>Begriff</b> genau
+              umgekehrt.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Gross-/Kleinschreibung prüfen</div>
+            <p>
+              An: „haus“ ist falsch, wenn „Haus“ erwartet wird.
+              Aus: Gross- und Kleinschreibung ist egal.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Alle Lösungen verlangen</div>
+            <p>
+              Gilt für Karten mit mehreren Lösungen, getrennt durch
+              <code>/</code> <code>,</code> <code>;</code> oder <code>|</code>
+              (z.&nbsp;B. „schnell, rasch“).
+              Aus: Eine der Lösungen reicht. An: Du musst alle nennen, ebenfalls
+              mit einem dieser Trennzeichen – die Reihenfolge ist egal.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">(Klammern) ignorieren</div>
+            <p>
+              Alles in runden Klammern zählt nicht zur Antwort. Bei
+              „to achieve (sth.)“ reicht also „to achieve“.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Automatisch weiter bei richtig</div>
+            <p>
+              An: Nach einer richtigen Antwort geht es von selbst weiter.
+              Aus: Du klickst „Weiter“ oder drückst Enter. Bei falschen
+              Antworten wartet CVOC immer, damit du die Lösung lesen kannst.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Wartezeit bis „weiter“</div>
+            <p>
+              Wie lange die Bestätigung „Richtig!“ stehen bleibt, bevor die
+              nächste Karte kommt (1000&nbsp;ms = 1 Sekunde). Wirkt nur, wenn
+              „Automatisch weiter“ an ist.
+            </p>
+          </div>
+
+          <div class="help-section">Buckets</div>
+
+          <div class="help-block">
+            <div class="help-heading">Bucket-Grösse</div>
+            <p>
+              Wie viele Wörter gleichzeitig geübt werden. Klein (5–8): Du
+              lernst wenige Wörter sehr intensiv. Gross (20+): mehr
+              Abwechslung, aber jedes Wort kommt seltener.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Richtige in Folge zum Bestehen</div>
+            <p>
+              Ein Wort gilt erst als gelernt, wenn es auf dem Bestwert steht
+              <b>und</b> so oft hintereinander richtig war. Eine falsche
+              Antwort setzt die Serie auf 0 zurück.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Wörter mischen statt Reihenfolge</div>
+            <p>
+              Aus: Die Wörter kommen in der Reihenfolge des Sets in den
+              Bucket. An: Die Reihenfolge wird zufällig gemischt.
+            </p>
+          </div>
+
+          <div class="help-section">Wahrscheinlichkeiten</div>
+
+          <div class="help-block">
+            <div class="help-heading">Gewichtung der Fehler</div>
+            <p>
+              Bestimmt, wie stark schlecht gekonnte Wörter bevorzugt werden.
+              Bei 1 kommt ein Wort mit doppelt so hohem Abstand zum Bestwert
+              doppelt so oft, bei 3 schon achtmal so oft.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Mindestabstand</div>
+            <p>
+              So viele andere Wörter sollen zwischen zwei Abfragen desselben
+              Wortes liegen. Dasselbe Wort kommt nie zweimal direkt
+              hintereinander. Ist der Bucket kleiner als der Abstand, wird der
+              Abstand so gut wie möglich eingehalten.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Härte des Abstands</div>
+            <p>
+              Wie streng der Mindestabstand gilt. 0: gar nicht, nur die
+              Wiederholung direkt hintereinander ist ausgeschlossen. Hohe Werte:
+              Kürzlich gefragte Wörter kommen fast nie vor Ablauf des
+              Abstands.
+            </p>
+          </div>
+
+          <div class="help-section">Bewertung</div>
+
+          <div class="help-block">
+            <div class="help-heading">Bestwert einer Karte</div>
+            <p>
+              Der niedrigste Wert, den eine Karte erreichen kann. Erst hier
+              kann sie als gelernt gelten.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Schlechtestwert einer Karte</div>
+            <p>
+              Der höchste Wert, den eine Karte erreichen kann. So kann eine
+              oft falsch beantwortete Karte nicht endlos „abrutschen“ und ist
+              schneller wieder aufgeholt.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Abzug bei richtig / Zuschlag bei falsch</div>
+            <p>
+              Um wie viel der Wert bei einer richtigen Antwort sinkt bzw. bei
+              einer falschen steigt. Hoher Abzug: schneller fertig. Hoher
+              Zuschlag: Fehler werden länger nachgeübt.
+            </p>
+          </div>
+
+          <div class="help-section">Entwickler</div>
+
+          <div class="help-block">
+            <div class="help-heading">Gewicht neben dem Wort anzeigen</div>
+            <p>
+              Zeigt neben dem Wort sein Gewicht (w), also wie stark es beim
+              Auslosen der nächsten Karte zählt. Nur zum Ausprobieren der
+              Einstellungen gedacht.
+            </p>
+          </div>
+
+          <div class="help-section">Knöpfe unten</div>
+
+          <div class="help-block">
+            <div class="help-heading">Standard</div>
+            <p>
+              Setzt alle Einstellungen auf die Ausgangswerte zurück. Dein
+              Lernfortschritt bleibt erhalten.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Fortschritt zurücksetzen</div>
+            <p>
+              Setzt alle Karten dieses Lernsets wieder auf den Startwert –
+              du fängst von vorne an. Die Einstellungen bleiben.
+            </p>
+          </div>
+
+          <div class="help-block">
+            <div class="help-heading">Tipp für den Anfang</div>
+            <p>
+              Die Standardwerte passen für die meisten Sets. Wenn dir das
+              Lernen zu lange dauert: „Richtige in Folge“ auf 1 oder „Abzug
+              bei richtig“ auf 2. Wenn Wörter nicht hängen bleiben: Bucket
+              kleiner machen.
+            </p>
+          </div>
         </div>
 
         <div class="settings-body">

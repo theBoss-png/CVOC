@@ -574,7 +574,17 @@ function openSettings() {
   settingsOverlay.classList.add("show");
 }
 
+function setHelpOpen(open) {
+  document.querySelector(".settings-panel").classList.toggle("help-open", open);
+  document.getElementById("settingsTitle").textContent = open ? "Erklärung" : "Einstellungen";
+  const btn = document.getElementById("settingsHelpBtn");
+  btn.textContent = open ? "←" : "?";
+  btn.title = open ? "Zurück zu den Einstellungen" : "Erklärung der Einstellungen";
+  document.getElementById("settingsHelp").scrollTop = 0;
+}
+
 function closeSettings() {
+  setHelpOpen(false);
   settingsOverlay.classList.remove("show");
   if (!finished && !answerInput.disabled) answerInput.focus();
 }
@@ -601,6 +611,9 @@ function updateRangeLabel(el) {
 function initSettingsUI() {
   document.getElementById("settingsBtn").addEventListener("click", openSettings);
   document.getElementById("settingsClose").addEventListener("click", closeSettings);
+  document.getElementById("settingsHelpBtn").addEventListener("click", () => {
+    setHelpOpen(!document.querySelector(".settings-panel").classList.contains("help-open"));
+  });
   settingsOverlay.addEventListener("click", (e) => {
     if (e.target === settingsOverlay) closeSettings();
   });

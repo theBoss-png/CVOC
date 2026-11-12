@@ -675,6 +675,99 @@ body::-webkit-scrollbar {
   background-clip: text;
 }
 
+.settings-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-help-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: linear-gradient(145deg, #1a1a1a, #262626);
+  color: var(--orange-2);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s ease;
+}
+
+.settings-help-btn:hover {
+  border-color: var(--orange-2);
+  color: #fff;
+}
+
+.settings-help {
+  display: none;
+  padding: 20px 28px 24px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: none;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #b8b8b8;
+}
+
+.settings-help::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-panel.help-open .settings-help {
+  display: flex;
+}
+
+.settings-panel.help-open .settings-body,
+.settings-panel.help-open .settings-footer {
+  display: none;
+}
+
+.help-intro {
+  color: #d0d0d0;
+}
+
+.help-section {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #6f6f6f;
+}
+
+.help-block {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #151515, #1c1c1c);
+  border: 1px solid rgba(255, 107, 53, 0.12);
+}
+
+.help-block p + p {
+  margin-top: 8px;
+}
+
+.help-heading {
+  font-weight: 700;
+  color: var(--orange-2);
+  margin-bottom: 4px;
+}
+
+.help-block b {
+  color: #eee;
+}
+
+.help-block code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  color: var(--orange-3);
+  font-size: 13px;
+}
+
 .settings-close {
   width: 38px;
   height: 38px;
@@ -901,5 +994,25 @@ body::-webkit-scrollbar {
 
   .alert-btn {
     width: 100%;
+  }
+}
+
+/* ----------------- Handy: Einstellungen ----------------- */
+@media (max-width: 768px) {
+  .settings-overlay {
+    padding: 12px;
+  }
+
+  .settings-header {
+    padding: 18px 18px 14px;
+  }
+
+  .settings-body,
+  .settings-help {
+    padding: 16px 18px;
+  }
+
+  .settings-footer {
+    padding: 14px 18px 18px;
   }
 }

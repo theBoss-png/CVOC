@@ -695,3 +695,17 @@ body::-webkit-scrollbar {
 .alert-btn-confirm:hover {
   transform: translateY(-3px) scale(1.05);
 }
+
+/* ----------------- Handy ----------------- */
+@media (max-width: 768px) {
+  /* Unter 16px zoomt iOS beim Antippen eines Feldes ins Bild */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .create-row {
+    flex-direction: column;
+  }
+}
