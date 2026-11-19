@@ -380,7 +380,9 @@ function checkAnswer() {
     answerInput.classList.add("incorrect");
     feedback.className = "feedback incorrect";
     feedback.style.display = "block";
-    feedback.innerHTML = `✗ Falsch! | Richtige Antwort: ${escapeHtml(correct)}`;
+    feedback.innerHTML =
+      `✗ Falsch! | Richtige Antwort: ${escapeHtml(correct)}` +
+      diffBlock(userAnswer, correct);
     overrideBtn.style.display = "block";
 
     if (cfg.retypeWrong) {
@@ -441,12 +443,208 @@ function retypeFeedback(title, attempt, correct) {
     `<div class="retype-row"><span class="retype-label">Richtig ist</span>` +
     `<span class="retype-right">${escapeHtml(correct)}</span></div>` +
     `</div>` +
+    diffBlock(attempt, correct) +
     `<div class="retype-hint">Tippe die richtige Antwort ab, um weiterzumachen.</div>`
   );
 }
 
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+// ----------------- Fehleranzeige -----------------
+// Vergleicht die Eingabe Zeichen für Zeichen mit der Lösung und zeigt,
+// was genau falsch ist: falscher Buchstabe, Buchstabe zu wenig, zu viel
+// oder vertauscht. Bei sehr vielen Fehlern nur die erste Abweichung.
+const MAX_LISTED_ERRORS = 3;
+
+function diffPrep(text) {
+  let t = String(text || "");
+  if (cfg.removeParentheses) t = removeParentheses(t);
+  return t.replace(/\s+/g, " ").trim();
+}
+
+function sameChar(a, b) {
+  return cfg.checkCapitalized ? a === b : a.toLowerCase() === b.toLowerCase();
+}
+
+// Levenshtein mit Rückverfolgung: Liste der Schritte von Eingabe zu Lösung.
+function editOps(got, want) {
+  const a = Array.from(got);
+  const b = Array.from(want);
+  const n = a.length;
+  const m = b.length;
+  const d = Array.from({ length: n + 1 }, (_, i) => {
+    const row = new Array(m + 1).fill(0);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 0; j <= m; j++) d[0][j] = j;
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (sameChar(a[i - 1], b[j - 1]) ? 0 : 1)
+      );
+    }
+  }
+
+  const ops = [];
+  let i = n;
+  let j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0) {
+      const same = sameChar(a[i - 1], b[j - 1]);
+      if (d[i][j] === d[i - 1][j - 1] + (same ? 0 : 1)) {
+        ops.push({ type: same ? "ok" : "sub", got: a[i - 1], want: b[j - 1] });
+        i--;
+        j--;
+        continue;
+      }
+    }
+    if (i > 0 && d[i][j] === d[i - 1][j] + 1) {
+      ops.push({ type: "extra", got: a[i - 1] });
+      i--;
+    } else {
+      ops.push({ type: "missing", want: b[j - 1] });
+      j--;
+    }
+  }
+  ops.reverse();
+
+  // Zwei benachbarte Buchstaben vertauscht ("Hasu" statt "Haus")
+  // zählt als ein Fehler, nicht als zwei falsche Buchstaben.
+  const merged = [];
+  for (let k = 0; k < ops.length; k++) {
+    const o = ops[k];
+    const p = ops[k + 1];
+    if (
+      o.type === "sub" && p && p.type === "sub" &&
+      sameChar(o.got, p.want) && sameChar(p.got, o.want)
+    ) {
+      merged.push({ type: "swap", got: o.got + p.got, want: o.want + p.want });
+      k++;
+    } else {
+      merged.push(o);
+    }
+  }
+  return merged;
+}
+
+function quoteChar(c) {
+  return c === " " ? "Leerzeichen" : `„${escapeHtml(c)}“`;
+}
+
+function describeOp(o) {
+  switch (o.type) {
+    case "sub":
+      if (o.got.toLowerCase() === o.want.toLowerCase()) {
+        return `Gross-/Kleinschreibung: ${quoteChar(o.got)} statt ${quoteChar(o.want)}`;
+      }
+      return `Falscher Buchstabe: ${quoteChar(o.got)} statt ${quoteChar(o.want)}`;
+    case "missing":
+      return `Buchstabe zu wenig: ${quoteChar(o.want)} fehlt`;
+    case "extra":
+      return `Buchstabe zu viel: ${quoteChar(o.got)}`;
+    case "swap":
+      return `Buchstaben vertauscht: ${quoteChar(o.got)} statt ${quoteChar(o.want)}`;
+  }
+  return "";
+}
+
+function markChars(text, cls) {
+  return `<span class="${cls}">${escapeHtml(text === " " ? "␣" : text)}</span>`;
+}
+
+// Liefert { marked, notes } als HTML oder null, wenn kein Vergleich passt.
+function diffHint(attempt, correct) {
+  const got = diffPrep(attempt);
+  const whole = diffPrep(correct);
+  if (!got || !whole) return null;
+
+  // Bei mehreren Lösungen mit der ähnlichsten vergleichen.
+  const targets = cfg.bothAnswers ? [whole] : [whole, ...splitVariants(whole)];
+  let best = null;
+  for (const want of targets) {
+    const ops = editOps(got, want);
+    const errors = ops.filter((o) => o.type !== "ok").length;
+    if (!best || errors < best.errors) best = { ops, errors, want };
+  }
+  if (!best || best.errors === 0) return null;
+
+  const tooMany =
+    best.errors > MAX_LISTED_ERRORS || best.errors * 2 > Array.from(best.want).length;
+  if (tooMany) return firstDeviation(got, best.want);
+
+  let marked = "";
+  const notes = [];
+  let pos = 0; // Stelle in der Lösung (1-basiert für die Anzeige)
+  for (const o of best.ops) {
+    const at = pos + 1;
+    switch (o.type) {
+      case "ok":
+        marked += escapeHtml(o.got);
+        break;
+      case "sub":
+      case "swap":
+        marked += markChars(o.got, "diff-del") + markChars(o.want, "diff-ins");
+        break;
+      case "missing":
+        marked += markChars(o.want, "diff-ins");
+        break;
+      case "extra":
+        marked += markChars(o.got, "diff-del");
+        break;
+    }
+    if (o.type !== "ok") notes.push(`Stelle ${at}: ${describeOp(o)}`);
+    if (o.want) pos += Array.from(o.want).length;
+  }
+
+  return {
+    marked,
+    notes: `<ul class="diff-notes">${notes.map((t) => `<li>${t}</li>`).join("")}</ul>`,
+  };
+}
+
+// Zu viele Fehler für eine Liste: nur zeigen, wo es zum ersten Mal
+// nicht mehr stimmt – der Rest der Eingabe wird ausgegraut.
+function firstDeviation(got, want) {
+  const a = Array.from(got);
+  const b = Array.from(want);
+  let i = 0;
+  while (i < a.length && i < b.length && sameChar(a[i], b[i])) i++;
+
+  let op;
+  let marked = escapeHtml(a.slice(0, i).join(""));
+  if (i >= a.length) {
+    op = { type: "missing", want: b[i] };
+    marked += markChars(b[i], "diff-ins");
+  } else if (i >= b.length) {
+    op = { type: "extra", got: a[i] };
+    marked += markChars(a[i], "diff-del");
+  } else {
+    op = { type: "sub", got: a[i], want: b[i] };
+    marked += markChars(a[i], "diff-del") + markChars(b[i], "diff-ins");
+  }
+  const rest = a.slice(i + 1).join("");
+  if (rest) marked += markChars(rest, "diff-rest");
+
+  return {
+    marked,
+    notes: `<ul class="diff-notes"><li>Erste Abweichung an Stelle ${i + 1}: ${describeOp(op)}</li></ul>`,
+  };
+}
+
+function diffBlock(attempt, correct) {
+  const hint = diffHint(attempt, correct);
+  if (!hint) return "";
+  return (
+    `<div class="diff-hint">` +
+    `<div class="diff-marked">${hint.marked}</div>` +
+    hint.notes +
+    `</div>`
+  );
 }
 
 function applyCorrect(q) {

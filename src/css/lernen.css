@@ -570,6 +570,59 @@ body::-webkit-scrollbar {
   color: #d8cfcf;
 }
 
+/* Fehleranzeige: was genau falsch war */
+.diff-hint {
+  margin: 14px auto 0;
+  width: fit-content;
+  max-width: 100%;
+  text-align: left;
+}
+
+.diff-marked {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e8e0e0;
+  letter-spacing: 0.5px;
+  word-break: break-word;
+  text-align: center;
+}
+
+.diff-del,
+.diff-ins {
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.diff-del {
+  color: #f44336;
+  background: rgba(244, 67, 54, 0.18);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.diff-ins {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.18);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.diff-rest {
+  color: #8a8080;
+}
+
+.diff-notes {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #d8cfcf;
+}
+
+.diff-notes li + li {
+  margin-top: 2px;
+}
+
 .correct-answer {
   margin-top: 10px;
   font-weight: 700;
