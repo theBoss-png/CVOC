@@ -566,6 +566,72 @@ body {
   padding: 10px;
 }
 
+.credit-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #1e1e1e, #232323);
+  border: 1px solid rgba(255, 107, 53, 0.45);
+}
+
+.credit-box.applied {
+  border-color: rgba(76, 175, 80, 0.45);
+}
+
+.credit-box.declined {
+  border-color: #333;
+}
+
+.credit-title {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.credit-box.applied .credit-title {
+  color: #4caf50;
+}
+
+.credit-text {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #bdbdbd;
+}
+
+.credit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.credit-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #e0e0e0;
+  background: transparent;
+  border: 1px solid #444;
+}
+
+.credit-btn:hover {
+  border-color: #666;
+}
+
+.credit-btn.primary {
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b35, #ff8c42);
+  border-color: transparent;
+}
+
+.credit-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .result-actions {
   display: grid;
   gap: 10px;

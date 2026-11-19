@@ -39,7 +39,12 @@ let startedAt = 0;
 let timerHandle = null;
 let advanceTimer = null;
 let running = false;
-let resultState = null; // { duration, date, before, overrides:Set }
+let resultState = null; // { duration, date, before, overrides:Set, credit }
+let creditQueue = Promise.resolve(); // Anrechnen nacheinander ausführen
+
+// Werte aus den Lernmodus-Einstellungen (gleiche Standardwerte wie lernen.js)
+const LEARN_SETTINGS_KEY = "cvoc.lernen.settings";
+const LEARN_DEFAULTS = { minAmount: 2, maxAmount: 8, rightStep: 1, wrongStep: 1 };
 
 // ----------------- Speicher -----------------
 function structuredCloneSafe(obj) {
@@ -411,9 +416,11 @@ function finish() {
     before: historyFor(setName()),
     overrides: new Set(),
     saved: false,
+    credit: { status: "checking", snapshot: null, stats: null },
   };
   show("resultScreen");
   renderResults();
+  checkCreditable();
 }
 
 // Rechnet alles aus und zeigt es an. Wird nach jedem "Als richtig
@@ -496,6 +503,9 @@ function renderResults() {
   $("resultHistoryBlock").hidden = all.length < 2;
   renderHistory($("resultHistory"), all, entry);
   renderMistakes(result.mistakes);
+
+  // Schon angerechnet? Dann mit der neuen Wertung nachführen.
+  if (resultState.credit.status === "applied") queueCredit(applyCredit);
 }
 
 function renderTypeBars(byType) {
@@ -628,6 +638,191 @@ function toggleOverride(index) {
   const y = window.scrollY;
   renderResults();
   window.scrollTo(0, y);
+}
+
+// ----------------- Dem Lernfortschritt anrechnen -----------------
+// Jede Antwort zählt wie im Lernmodus: richtig senkt den Stand der Karte
+// um "Abzug bei richtig", falsch (oder leer) hebt ihn um "Zuschlag bei
+// falsch". Der Stand vor dem Anrechnen wird gemerkt, damit es sich
+// rückgängig machen und nach "Als richtig werten" neu rechnen lässt.
+function learnCfg() {
+  return { ...LEARN_DEFAULTS, ...readJson(localStorage, LEARN_SETTINGS_KEY, {}) };
+}
+
+function queueCredit(fn) {
+  creditQueue = creditQueue.then(fn).catch((e) => {
+    console.error("Fehler beim Anrechnen:", e);
+    resultState.credit.status = "error";
+    renderCredit();
+  });
+  return creditQueue;
+}
+
+async function loadSavedSet() {
+  const res = await CVOC.loadQuizzes();
+  const all = (res && res.success && res.quizzes) || [];
+  const saved = all.find((q) => q.name === (quiz && quiz.name));
+  return { all, saved };
+}
+
+// Ordnet jeder Testkarte die Karte im gespeicherten Set zu.
+function matchCards(saved) {
+  const key = (c) => `${c.question}\u0000${c.answer}`;
+  const byKey = new Map();
+  saved.cards.forEach((c, i) => {
+    if (!byKey.has(key(c))) byKey.set(key(c), i);
+  });
+  return quiz.cards.map((c, i) => {
+    const s = saved.cards[i];
+    if (s && key(s) === key(c)) return i;
+    return byKey.has(key(c)) ? byKey.get(key(c)) : -1;
+  });
+}
+
+function setPercent(cards, c) {
+  const n = cards.length;
+  if (!n) return 0;
+  const sum = cards.reduce((a, card) => a + (card.amount === undefined ? 5 : card.amount), 0);
+  const worst = c.maxAmount * n;
+  const best = c.minAmount * n;
+  if (worst === best) return 100;
+  return Math.round(((worst - sum) / (worst - best)) * 100);
+}
+
+async function checkCreditable() {
+  const state = resultState;
+  try {
+    const { saved } = await loadSavedSet();
+    const ok = saved && Array.isArray(saved.cards) && matchCards(saved).some((i) => i !== -1);
+    if (state !== resultState) return;
+    state.credit.status = ok ? "ask" : "unavailable";
+  } catch (e) {
+    state.credit.status = "unavailable";
+  }
+  renderCredit();
+}
+
+async function applyCredit() {
+  const credit = resultState.credit;
+  const c = learnCfg();
+  const { all, saved } = await loadSavedSet();
+  if (!saved) {
+    credit.status = "unavailable";
+    return renderCredit();
+  }
+  const map = matchCards(saved);
+
+  // Immer vom Stand vor dem Anrechnen ausgehen.
+  if (!credit.snapshot) {
+    credit.snapshot = saved.cards.map((card) => card.amount);
+    credit.percentBefore = setPercent(saved.cards, c);
+  } else {
+    saved.cards.forEach((card, i) => (card.amount = credit.snapshot[i]));
+  }
+
+  const result = CvocTest.summarize(questions, responses, settings.check, [...resultState.overrides]);
+  const wrong = new Set(result.mistakes.filter((m) => !m.overridden).map((m) => m.index));
+
+  questions.forEach((q, i) => {
+    const target = map[q.cardIndex];
+    if (target === -1 || target === undefined) return;
+    const card = saved.cards[target];
+    let amount = card.amount === undefined ? 5 : card.amount;
+    amount = Math.min(c.maxAmount, Math.max(c.minAmount, amount));
+    amount = wrong.has(i)
+      ? Math.min(c.maxAmount, amount + c.wrongStep)
+      : Math.max(c.minAmount, amount - c.rightStep);
+    card.amount = amount;
+  });
+
+  let better = 0;
+  let worse = 0;
+  saved.cards.forEach((card, i) => {
+    const before = credit.snapshot[i] === undefined ? 5 : credit.snapshot[i];
+    if (card.amount < before) better++;
+    else if (card.amount > before) worse++;
+  });
+  saved.percent = setPercent(saved.cards, c);
+
+  const res = await CVOC.saveQuizzes(all);
+  if (res && res.success === false) throw new Error(res.error || "Speichern fehlgeschlagen");
+  credit.status = "applied";
+  credit.stats = { better, worse, before: credit.percentBefore, after: saved.percent };
+  renderCredit();
+}
+
+async function undoCredit() {
+  const credit = resultState.credit;
+  if (!credit.snapshot) return;
+  const { all, saved } = await loadSavedSet();
+  if (saved) {
+    saved.cards.forEach((card, i) => {
+      if (i < credit.snapshot.length) card.amount = credit.snapshot[i];
+    });
+    saved.percent = setPercent(saved.cards, learnCfg());
+    const res = await CVOC.saveQuizzes(all);
+    if (res && res.success === false) throw new Error(res.error || "Speichern fehlgeschlagen");
+  }
+  credit.snapshot = null;
+  credit.stats = null;
+  credit.status = "ask";
+  renderCredit();
+}
+
+function creditButton(text, cls, onClick) {
+  const b = el("button", cls, text);
+  b.addEventListener("click", () => {
+    b.disabled = true;
+    onClick();
+  });
+  return b;
+}
+
+function renderCredit() {
+  const box = $("creditBox");
+  const credit = resultState && resultState.credit;
+  if (!credit || credit.status === "checking" || credit.status === "unavailable") {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  box.className = "credit-box " + credit.status;
+  const title = $("creditTitle");
+  const text = $("creditText");
+  const actions = $("creditActions");
+  actions.innerHTML = "";
+  const c = learnCfg();
+
+  if (credit.status === "ask") {
+    title.textContent = "Dem Lernfortschritt anrechnen?";
+    text.textContent =
+      `Die Antworten zählen dann wie im Lernmodus: richtige Wörter −${c.rightStep}, ` +
+      `falsche und leere +${c.wrongStep}. Was du falsch hattest, kommt beim Lernen häufiger dran.`;
+    actions.append(
+      creditButton("Anrechnen", "credit-btn primary", () => queueCredit(applyCredit)),
+      creditButton("Nein danke", "credit-btn", () => {
+        credit.status = "declined";
+        renderCredit();
+      })
+    );
+  } else if (credit.status === "declined") {
+    title.textContent = "Nicht angerechnet";
+    text.textContent = "Dein Lernfortschritt bleibt, wie er war.";
+    actions.append(creditButton("Doch anrechnen", "credit-btn", () => queueCredit(applyCredit)));
+  } else if (credit.status === "applied") {
+    const s = credit.stats;
+    title.textContent = "✓ Dem Lernfortschritt angerechnet";
+    const parts = [];
+    if (s.better) parts.push(`${s.better} ${s.better === 1 ? "Wort" : "Wörter"} verbessert`);
+    if (s.worse) parts.push(`${s.worse} ${s.worse === 1 ? "Wort" : "Wörter"} verschlechtert`);
+    if (!parts.length) parts.push("Keine Karte hat sich verändert");
+    text.textContent = `${parts.join(" · ")}. Lernfortschritt ${s.before} % → ${s.after} %.`;
+    actions.append(creditButton("↩︎ Rückgängig", "credit-btn", () => queueCredit(undoCredit)));
+  } else {
+    title.textContent = "Anrechnen fehlgeschlagen";
+    text.textContent = "Der Lernfortschritt konnte nicht gespeichert werden.";
+    actions.append(creditButton("Nochmals versuchen", "credit-btn", () => queueCredit(applyCredit)));
+  }
 }
 
 // ----------------- Verdrahtung -----------------
