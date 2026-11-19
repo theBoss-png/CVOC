@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
   removeParentheses: true, // (Klammerinhalte) ignorieren
   autoNext: true, // bei richtig automatisch weiter
   autoNextDelay: 1000, // ms
+  retypeWrong: false, // falsche Antwort muss richtig abgetippt werden
   shufflePool: false, // Reihenfolge der Wörter mischen
 
   // Buckets
@@ -134,6 +135,7 @@ let bucket = []; // Indizes im aktiven Lernfenster
 let pool = []; // Indizes, die noch warten
 let recent = []; // zuletzt gefragte Indizes (ältestes zuerst)
 let currentQuestion = 0;
+let retyping = false; // falsch beantwortet, Lösung muss abgetippt werden
 let finished = false;
 let autoNextTimer = null;
 
@@ -359,6 +361,8 @@ function checkAnswer() {
   const q = questions[currentQuestion];
   const correct = getExpectedAnswer();
 
+  if (retyping) return checkRetype(userAnswer, correct);
+
   if (correctAnswer(userAnswer, correct)) {
     applyCorrect(q);
     answerInput.classList.add("correct");
@@ -376,15 +380,58 @@ function checkAnswer() {
     answerInput.classList.add("incorrect");
     feedback.className = "feedback incorrect";
     feedback.style.display = "block";
-    feedback.innerHTML = `✗ Falsch! | Richtige Antwort: ${correct}`;
-    nextBtn.style.display = "block";
+    feedback.innerHTML = `✗ Falsch! | Richtige Antwort: ${escapeHtml(correct)}`;
     overrideBtn.style.display = "block";
+
+    if (cfg.retypeWrong) {
+      // Weiter geht es erst, wenn die Lösung einmal richtig abgetippt ist.
+      retyping = true;
+      feedback.innerHTML += "<br>Tippe die richtige Antwort ab, um weiterzumachen.";
+      updateProgressBar();
+      saveQuiz();
+      answerInput.value = "";
+      answerInput.focus();
+      return;
+    }
+    nextBtn.style.display = "block";
   }
 
   updateProgressBar();
   saveQuiz();
   checkBtn.style.display = "none";
   answerInput.disabled = true;
+}
+
+// Abtippen nach einer falschen Antwort: zählt nicht für die Bewertung,
+// gibt nur den Weg zur nächsten Karte frei.
+function checkRetype(userAnswer, correct) {
+  if (!correctAnswer(userAnswer, correct)) {
+    answerInput.classList.remove("incorrect");
+    void answerInput.offsetWidth; // Rot-Markierung neu auslösen
+    answerInput.classList.add("incorrect");
+    feedback.className = "feedback incorrect";
+    feedback.innerHTML = `✗ Noch nicht richtig | Richtige Antwort: ${escapeHtml(correct)}`;
+    answerInput.select();
+    return;
+  }
+
+  retyping = false;
+  answerInput.classList.remove("incorrect");
+  answerInput.classList.add("correct");
+  feedback.className = "feedback correct";
+  feedback.innerHTML = "✓ Richtig abgetippt – weiter geht's.";
+  overrideBtn.style.display = "none";
+  checkBtn.style.display = "none";
+  answerInput.disabled = true;
+  if (cfg.autoNext) {
+    autoNextTimer = setTimeout(nextQuestion, cfg.autoNextDelay);
+  } else {
+    nextBtn.style.display = "block";
+  }
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 function applyCorrect(q) {
@@ -394,6 +441,9 @@ function applyCorrect(q) {
 
 function overrideAnswer() {
   const q = questions[currentQuestion];
+  retyping = false;
+  checkBtn.style.display = "none";
+  answerInput.disabled = true;
   // Falschbewertung zurücknehmen …
   q.amount = Math.min(cfg.maxAmount, Math.max(cfg.minAmount, q.amount - cfg.wrongStep));
   // … und als richtig werten.
@@ -424,6 +474,7 @@ function nextQuestion() {
 
   currentQuestion = next;
   rememberShown(next);
+  retyping = false;
 
   displayCurrentQuestion();
   answerInput.value = "";
@@ -574,6 +625,7 @@ function startFirstQuestion() {
   if (first === null) return showResults();
   currentQuestion = first;
   rememberShown(first);
+  retyping = false;
   displayCurrentQuestion();
   answerInput.value = "";
   answerInput.disabled = false;
