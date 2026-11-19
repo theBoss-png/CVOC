@@ -526,6 +526,39 @@ body {
   font-weight: 700;
 }
 
+.mistake.overridden {
+  background: linear-gradient(145deg, #141a14, #182018);
+  border-color: rgba(76, 175, 80, 0.35);
+}
+
+.mistake.overridden .mistake-line .wrong {
+  color: #9bc49d;
+  text-decoration: none;
+}
+
+.override-mark {
+  margin-top: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.45);
+}
+
+.override-mark:hover {
+  background: rgba(76, 175, 80, 0.16);
+}
+
+.override-mark.undo {
+  color: #bdbdbd;
+  background: transparent;
+  border-color: #444;
+}
+
 .no-mistakes {
   text-align: center;
   color: #4caf50;

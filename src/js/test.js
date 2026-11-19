@@ -39,6 +39,7 @@ let startedAt = 0;
 let timerHandle = null;
 let advanceTimer = null;
 let running = false;
+let resultState = null; // { duration, date, before, overrides:Set }
 
 // ----------------- Speicher -----------------
 function structuredCloneSafe(obj) {
@@ -88,6 +89,17 @@ function loadQuiz() {
 function historyFor(name) {
   const all = readJson(localStorage, HISTORY_KEY, {});
   return Array.isArray(all[name]) ? all[name] : [];
+}
+
+// Ersetzt den Eintrag mit demselben Datum (nachträgliche Korrektur).
+function replaceHistory(name, entry) {
+  const all = readJson(localStorage, HISTORY_KEY, {});
+  const list = Array.isArray(all[name]) ? all[name] : [];
+  const i = list.findIndex((h) => h.date === entry.date);
+  if (i === -1) list.push(entry);
+  else list[i] = entry;
+  all[name] = list;
+  writeJson(localStorage, HISTORY_KEY, all);
 }
 
 function addHistory(name, entry) {
@@ -392,9 +404,23 @@ function finish() {
   clearInterval(timerHandle);
   clearTimeout(advanceTimer);
   running = false;
-  const duration = Date.now() - startedAt;
 
-  const result = CvocTest.summarize(questions, responses, settings.check);
+  resultState = {
+    duration: Date.now() - startedAt,
+    date: new Date().toISOString(),
+    before: historyFor(setName()),
+    overrides: new Set(),
+    saved: false,
+  };
+  show("resultScreen");
+  renderResults();
+}
+
+// Rechnet alles aus und zeigt es an. Wird nach jedem "Als richtig
+// werten" erneut aufgerufen; der gespeicherte Eintrag wird ersetzt.
+function renderResults() {
+  const { duration, before, overrides } = resultState;
+  const result = CvocTest.summarize(questions, responses, settings.check, [...overrides]);
   const g = CvocTest.grade(result.points, result.max, scale());
   const covered = new Set(questions.map((q) => q.cardIndex)).size;
   const range = CvocTest.gradeRange(result.points, result.max, scale(), {
@@ -402,9 +428,8 @@ function finish() {
     population: wordCount(),
   });
 
-  const before = historyFor(setName());
   const entry = {
-    date: new Date().toISOString(),
+    date: resultState.date,
     points: result.points,
     max: result.max,
     grade: g,
@@ -412,17 +437,20 @@ function finish() {
     duration,
     types: activeTypes(),
     byType: result.byType,
+    overridden: result.overridden,
   };
-  addHistory(setName(), entry);
-
-  show("resultScreen");
+  if (resultState.saved) replaceHistory(setName(), entry);
+  else addHistory(setName(), entry);
+  resultState.saved = true;
 
   const gv = $("gradeValue");
   gv.textContent = formatGrade(g);
   gv.classList.toggle("good", g >= 5);
   gv.classList.toggle("bad", g < 4);
   const pct = Math.round((result.points / result.max) * 100);
-  $("gradePoints").textContent = `${result.points} von ${result.max} Punkten · ${pct} %`;
+  $("gradePoints").textContent =
+    `${result.points} von ${result.max} Punkten · ${pct} %` +
+    (result.overridden ? ` · davon ${result.overridden} selbst gewertet` : "");
 
   // Verbesserung gegenüber dem letzten Test
   const delta = $("gradeDelta");
@@ -536,7 +564,8 @@ function line(label, value, cls) {
 function renderMistakes(mistakes) {
   const box = $("mistakes");
   box.innerHTML = "";
-  $("mistakeTitle").textContent = mistakes.length ? `Fehler (${mistakes.length})` : "Fehler";
+  const open = mistakes.filter((m) => !m.overridden).length;
+  $("mistakeTitle").textContent = open ? `Fehler (${open})` : "Fehler";
   if (!mistakes.length) {
     box.appendChild(el("div", "no-mistakes", "Keine Fehler – alles richtig! 🎉"));
     return;
@@ -546,9 +575,12 @@ function renderMistakes(mistakes) {
     const q = m.question;
     const r = m.response;
     const unanswered = r === null || r === "";
-    const card = el("div", "mistake");
+    const card = el("div", "mistake" + (m.overridden ? " overridden" : ""));
     const head = el("div", "mistake-head");
-    head.append(el("span", null, `Frage ${m.index + 1}`), el("span", null, TYPE_LABELS[q.type]));
+    head.append(
+      el("span", null, `Frage ${m.index + 1}`),
+      el("span", null, m.overridden ? `${TYPE_LABELS[q.type]} · selbst als richtig gewertet` : TYPE_LABELS[q.type])
+    );
     card.appendChild(head);
 
     if (q.type === "tf") {
@@ -572,8 +604,30 @@ function renderMistakes(mistakes) {
       card.appendChild(line("Deine Antwort", given, unanswered ? "empty" : "wrong"));
       card.appendChild(line("Richtig", q.solution, "right"));
     }
+
+    // Selbst werten: z. B. nur ein Punkt oder Tippfehler vergessen.
+    if (!unanswered) {
+      const btn = el(
+        "button",
+        "override-mark" + (m.overridden ? " undo" : ""),
+        m.overridden ? "↩︎ Wertung zurücknehmen" : "✓ Als richtig werten"
+      );
+      btn.addEventListener("click", () => toggleOverride(m.index));
+      card.appendChild(btn);
+    }
     box.appendChild(card);
   }
+}
+
+function toggleOverride(index) {
+  if (!resultState) return;
+  const o = resultState.overrides;
+  if (o.has(index)) o.delete(index);
+  else o.add(index);
+  // Scrollposition halten, die Liste wird neu aufgebaut.
+  const y = window.scrollY;
+  renderResults();
+  window.scrollTo(0, y);
 }
 
 // ----------------- Verdrahtung -----------------

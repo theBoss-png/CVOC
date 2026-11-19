@@ -27,7 +27,7 @@ const CVOC = (() => {
 
   const isDesktop = !!ipcRenderer;
   const STORAGE_KEY = "cvoc.quizzes";
-  const APP_VERSION = "1.3.1"; // wird im Web angezeigt, Desktop fragt Electron
+  const APP_VERSION = "1.3.2"; // wird im Web angezeigt, Desktop fragt Electron
 
   // ----------------- Lernsets -----------------
   function readWeb() {

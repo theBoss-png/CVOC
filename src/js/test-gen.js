@@ -688,22 +688,31 @@ const CvocTest = (() => {
     };
   }
 
-  function summarize(questions, responses, checkOptions) {
+  // overrides: Indizes, die man selbst als richtig gewertet hat
+  // (z. B. nur der Punkt vergessen). Sie zählen als Punkt, bleiben aber
+  // in der Fehlerliste, damit man die Wertung zurücknehmen kann.
+  function summarize(questions, responses, checkOptions, overrides) {
+    const forced = new Set(overrides || []);
     const byType = {};
     const mistakes = [];
     let points = 0;
+    let overridden = 0;
     questions.forEach((q, i) => {
-      const ok = scoreQuestion(q, responses[i], checkOptions);
+      const scored = scoreQuestion(q, responses[i], checkOptions);
+      const isForced = !scored && forced.has(i);
+      const ok = scored || isForced;
       byType[q.type] = byType[q.type] || { right: 0, total: 0 };
       byType[q.type].total++;
       if (ok) {
         points++;
         byType[q.type].right++;
-      } else {
-        mistakes.push({ index: i, question: q, response: responses[i] });
+      }
+      if (!scored) {
+        if (isForced) overridden++;
+        mistakes.push({ index: i, question: q, response: responses[i], overridden: isForced });
       }
     });
-    return { points, max: questions.length, byType, mistakes };
+    return { points, max: questions.length, byType, mistakes, overridden };
   }
 
   return {
