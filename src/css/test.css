@@ -1,0 +1,568 @@
+/* ============================================================
+   CVOC – Testmodus
+   Baut auf lernen.css auf (Container, Karte, Buttons, Schalter).
+   ============================================================ */
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  align-items: flex-start;
+  padding-top: 80px;
+  padding-bottom: 40px;
+}
+
+.test-container {
+  max-width: 640px;
+}
+
+/* ---------- Einrichten ---------- */
+.test-head {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.test-title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--orange-2), var(--orange-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.test-sub {
+  margin-top: 4px;
+  color: #9a9a9a;
+  font-size: 14px;
+}
+
+.test-section {
+  margin: 26px 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+
+.setting-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.setting-stack .setting-hint {
+  margin-top: 3px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 5px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.segmented button {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9a9a9a;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.segmented button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange-2), var(--orange-3));
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
+}
+
+.field-select {
+  font: inherit;
+  font-size: 14px;
+  color: #e6e6e6;
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.start-btn {
+  margin-top: 28px;
+}
+
+/* ---------- Test ---------- */
+.run-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.run-counter {
+  color: #bdbdbd;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.timer {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #e6e6e6;
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  border: 1px solid rgba(255, 107, 53, 0.25);
+  border-radius: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.timer.hidden-time {
+  color: #6f6f6f;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.type-chip {
+  display: inline-block;
+  margin: 22px 0 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange-3);
+  border: 1px solid rgba(255, 200, 66, 0.35);
+  background: rgba(255, 200, 66, 0.06);
+}
+
+.test-card {
+  min-height: 150px;
+  padding: 36px 28px;
+  margin-bottom: 22px;
+}
+
+.test-card:hover {
+  transform: none;
+}
+
+.test-prompt {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.tf-pair {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.tf-arrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #7a7a7a;
+}
+
+.tf-solution {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--orange-3);
+}
+
+.mc-options,
+.tf-options {
+  display: grid;
+  gap: 10px;
+}
+
+.tf-options {
+  grid-template-columns: 1fr 1fr;
+}
+
+.choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e6e6e6;
+  padding: 15px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 107, 53, 0.18);
+  background: linear-gradient(145deg, #161616, #1f1f1f);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.choice-btn:hover {
+  border-color: rgba(255, 107, 53, 0.55);
+  transform: translateY(-1px);
+}
+
+.choice-btn.selected {
+  border-color: var(--orange-2);
+  background: linear-gradient(145deg, #2a1a12, #33200f);
+  box-shadow: 0 0 0 1px var(--orange-2), 0 0 24px rgba(255, 107, 53, 0.25);
+}
+
+.choice-btn .key {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #bdbdbd;
+  background: #0d0d0d;
+  border: 1px solid #333;
+}
+
+.run-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.nav-btn {
+  flex: 1;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  color: var(--orange-2);
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+  border: 2px solid rgba(255, 107, 53, 0.5);
+}
+
+.nav-btn.primary {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--orange-2), var(--orange-3));
+  box-shadow: 0 8px 22px rgba(255, 107, 53, 0.35);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #111;
+  color: #777;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.dot.answered {
+  background: rgba(255, 107, 53, 0.18);
+  border-color: rgba(255, 107, 53, 0.5);
+  color: #e6e6e6;
+}
+
+.dot.current {
+  box-shadow: 0 0 0 2px var(--orange-3);
+}
+
+/* ---------- Ergebnis ---------- */
+.grade-hero {
+  text-align: center;
+  padding: 10px 0 6px;
+}
+
+.grade-label {
+  font-size: 13px;
+  color: #8a8a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.grade-value {
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, var(--orange-2), var(--orange-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.grade-value.good {
+  background: linear-gradient(135deg, #34d399, #a3e635);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.grade-value.bad {
+  background: linear-gradient(135deg, #f44336, #ff7247);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.grade-points {
+  color: #cfcfcf;
+  font-weight: 600;
+}
+
+.grade-delta {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.grade-delta.up {
+  color: #4caf50;
+}
+
+.grade-delta.down {
+  color: #f44336;
+}
+
+.grade-delta.same {
+  color: #9a9a9a;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.stat {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #161616, #1f1f1f);
+  border: 1px solid rgba(255, 107, 53, 0.18);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #8a8a8a;
+  font-weight: 600;
+}
+
+.stat-value {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #f0f0f0;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8a8a8a;
+}
+
+.type-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.type-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #d6d6d6;
+  margin-bottom: 5px;
+}
+
+.type-bar-track {
+  height: 10px;
+  border-radius: 10px;
+  background: #121212;
+  overflow: hidden;
+}
+
+.type-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--orange-2), var(--orange-3));
+}
+
+.history-chart {
+  display: grid;
+  gap: 8px;
+}
+
+.history-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  padding: 10px 12px 0;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #121212, #1a1a1a);
+  border: 1px solid rgba(255, 107, 53, 0.12);
+}
+
+.history-bar {
+  flex: 1;
+  max-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.history-bar-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cfcfcf;
+  margin-bottom: 3px;
+}
+
+.history-bar-fill {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--orange-3), var(--orange-2));
+  opacity: 0.55;
+}
+
+.history-bar.latest .history-bar-fill {
+  opacity: 1;
+}
+
+.history-note {
+  font-size: 13px;
+  color: #9a9a9a;
+  line-height: 1.5;
+}
+
+.mistakes {
+  display: grid;
+  gap: 10px;
+}
+
+.mistake {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #1a1414, #201818);
+  border: 1px solid rgba(244, 67, 54, 0.25);
+}
+
+.mistake-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #8a8a8a;
+  margin-bottom: 6px;
+}
+
+.mistake-prompt {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.mistake-line {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.mistake-line .k {
+  flex: 0 0 110px;
+  color: #8a8a8a;
+}
+
+.mistake-line .wrong {
+  color: #f44336;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.mistake-line .empty {
+  color: #777;
+  font-style: italic;
+}
+
+.mistake-line .right {
+  color: #4caf50;
+  font-weight: 700;
+}
+
+.no-mistakes {
+  text-align: center;
+  color: #4caf50;
+  font-weight: 700;
+  padding: 10px;
+}
+
+.result-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+/* ---------- Handy ---------- */
+@media (max-width: 600px) {
+  body {
+    padding: 70px 12px 30px;
+  }
+
+  .test-container {
+    padding: 22px 16px;
+    border-radius: 24px;
+  }
+
+  .segmented {
+    grid-template-columns: 1fr;
+  }
+
+  .grade-value {
+    font-size: 64px;
+  }
+
+  .mistake-line .k {
+    flex-basis: 90px;
+  }
+
+  .test-card {
+    padding: 28px 18px;
+  }
+}

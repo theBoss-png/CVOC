@@ -437,6 +437,31 @@ document.getElementById('btnAnki').addEventListener('click', () => {
     window.location.href = 'anki.html';
 });
 
+// ----------------- Test Button -----------------
+document.getElementById('btnTest').addEventListener('click', () => {
+    let quiz;
+    if (currentQuiz) {
+        quiz = currentQuiz;
+    } else {
+        const inputVal = document.getElementById('text-input').value.trim();
+        if (!inputVal) {
+            customAlertSimple({
+                title: 'Hinweis',
+                icon: '⚠️',
+                message: 'Bitte erst ein Lernset laden oder erstellen, bevor du einen Test startest.',
+                confirmText: 'OK'
+            });
+            return;
+        }
+        quiz = decompressQuiz(inputVal);
+        if (!quiz || !quiz.cards || quiz.cards.length === 0) return;
+        quiz = addPrivateData(quiz);
+    }
+
+    localStorage.setItem('currentQuiz', JSON.stringify(quiz));
+    window.location.href = 'test.html';
+});
+
 // ----------------- Karteikarten Button -----------------
 document.getElementById('btnCards').addEventListener('click', () => {
     const inputVal = document.getElementById('text-input').value.trim();

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/lernen.css" />
+    <link rel="stylesheet" href="../css/test.css" />
+    <title>CVOC – Test</title>
+  </head>
+
+  <body>
+    <div class="top-buttons">
+      <button class="back-btn" id="backBtn">← Zurück</button>
+    </div>
+
+    <!-- ===================== Einrichten ===================== -->
+    <div class="container test-container" id="setupScreen">
+      <div class="test-head">
+        <div class="test-title">Test</div>
+        <div class="test-sub" id="setupSetName">–</div>
+      </div>
+
+      <div class="test-section">Fragearten</div>
+      <div class="setting-stack">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Schreiben</div>
+            <div class="setting-hint">Das Wort sehen, die Lösung eintippen.</div>
+          </div>
+          <div class="toggle-switch" data-type="write"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Multiple Choice</div>
+            <div class="setting-hint">Vier Antworten, eine stimmt.</div>
+          </div>
+          <div class="toggle-switch" data-type="mc"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Richtig oder falsch</div>
+            <div class="setting-hint">
+              Stimmt das Paar? Bei Französisch und Englisch sind kleine Wörtchen
+              vertauscht (le/la, a/an …) oder Akzente und Endungen falsch.
+            </div>
+          </div>
+          <div class="toggle-switch" data-type="tf"></div>
+        </div>
+      </div>
+
+      <div class="test-section">Abfragerichtung</div>
+      <div class="segmented" id="directionSeg">
+        <button data-dir="term">Begriff → Definition</button>
+        <button data-dir="answer">Definition → Begriff</button>
+        <button data-dir="mixed">Gemischt</button>
+      </div>
+
+      <div class="test-section">Umfang</div>
+      <div class="setting-row column">
+        <div class="setting-head">
+          <div class="setting-label">Punkte (1 Frage = 1 Punkt)</div>
+          <div class="setting-value" id="countValue">20</div>
+        </div>
+        <input type="range" class="setting-range" id="countRange" min="1" max="20" step="1" />
+        <div class="setting-hint" id="countHint"></div>
+      </div>
+
+      <div class="test-section">Bewertung</div>
+      <div class="setting-stack">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">(Klammern) ignorieren</div>
+            <div class="setting-hint">„zerzaust (Haare)“ – „zerzaust“ reicht.</div>
+          </div>
+          <div class="toggle-switch" data-check="removeParentheses"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Gross-/Kleinschreibung prüfen</div>
+          </div>
+          <div class="toggle-switch" data-check="checkCapitalized"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Alle Lösungen verlangen</div>
+            <div class="setting-hint">
+              Bei „behaupten, bestätigen“ müssen beide stimmen, sonst reicht eine.
+            </div>
+          </div>
+          <div class="toggle-switch" data-check="bothAnswers"></div>
+        </div>
+        <div class="setting-row column">
+          <div class="setting-head">
+            <div class="setting-label">Für die Note 6 braucht es</div>
+            <div class="setting-value" id="fullAtValue">100 %</div>
+          </div>
+          <input type="range" class="setting-range" id="fullAtRange" min="50" max="100" step="5" />
+          <div class="setting-hint">
+            Note = 1 + 5 × Punkte ÷ Punkte für die 6 (Schweizer Skala, 6 ist die
+            beste Note).
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Note runden auf</div>
+          <select class="field-select" id="roundingSelect">
+            <option value="0.5">Halbe (4.5)</option>
+            <option value="0.25">Viertel (4.75)</option>
+            <option value="0.1">Zehntel (4.7)</option>
+            <option value="0">nicht runden</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="historyBlock" hidden>
+        <div class="test-section">Bisherige Tests</div>
+        <div class="history-chart" id="setupHistory"></div>
+      </div>
+
+      <button class="button check-btn start-btn" id="startBtn">Test starten</button>
+    </div>
+
+    <!-- ===================== Test ===================== -->
+    <div class="container test-container" id="runScreen" hidden>
+      <div class="run-top">
+        <div class="run-counter" id="runCounter">Frage 1 / 20</div>
+        <button class="timer" id="timer" title="Klicken zum Ausblenden">0:00</button>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="runProgress"></div>
+      </div>
+
+      <div class="type-chip" id="typeChip">Schreiben</div>
+
+      <div class="card test-card">
+        <div class="test-prompt">
+          <div class="term" id="promptText">…</div>
+          <div class="tf-pair" id="tfPair" hidden>
+            <div class="tf-arrow">bedeutet</div>
+            <div class="tf-solution" id="tfSolution"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="writeArea">
+        <input
+          type="text"
+          class="answer-input"
+          id="writeInput"
+          placeholder="Deine Antwort …"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+      </div>
+      <div class="mc-options" id="mcArea" hidden></div>
+      <div class="tf-options" id="tfArea" hidden>
+        <button class="choice-btn" data-tf="true"><span class="key">R</span>Richtig</button>
+        <button class="choice-btn" data-tf="false"><span class="key">F</span>Falsch</button>
+      </div>
+
+      <div class="run-nav">
+        <button class="nav-btn" id="prevBtn">← Zurück</button>
+        <button class="nav-btn primary" id="nextBtn">Weiter →</button>
+      </div>
+
+      <div class="dots" id="dots"></div>
+    </div>
+
+    <!-- ===================== Ergebnis ===================== -->
+    <div class="container test-container" id="resultScreen" hidden>
+      <div class="grade-hero">
+        <div class="grade-label">Erwartete Note</div>
+        <div class="grade-value" id="gradeValue">–</div>
+        <div class="grade-points" id="gradePoints"></div>
+        <div class="grade-delta" id="gradeDelta"></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Genauigkeit</div>
+          <div class="stat-value" id="accValue">–</div>
+          <div class="stat-sub" id="accSub"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Zeit</div>
+          <div class="stat-value" id="timeValue">–</div>
+          <div class="stat-sub" id="timeSub"></div>
+        </div>
+      </div>
+
+      <div class="test-section">Punkte nach Frageart</div>
+      <div class="type-bars" id="typeBars"></div>
+
+      <div id="resultHistoryBlock" hidden>
+        <div class="test-section">Verlauf</div>
+        <div class="history-chart" id="resultHistory"></div>
+      </div>
+
+      <div class="test-section" id="mistakeTitle">Fehler</div>
+      <div class="mistakes" id="mistakes"></div>
+
+      <div class="result-actions">
+        <button class="button check-btn" id="againBtn">Neuer Test</button>
+        <button class="nav-btn" id="setupBtn">Einstellungen ändern</button>
+      </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="alert-overlay">
+      <div class="alert-container">
+        <div id="alertIcon" class="alert-icon">⚠️</div>
+        <div class="alert-title" id="alertTitle">Achtung</div>
+        <div class="alert-message" id="alertMessage"></div>
+        <div class="alert-buttons">
+          <button class="alert-btn alert-btn-cancel" id="alertBtnCancel">Abbrechen</button>
+          <button class="alert-btn alert-btn-confirm" id="alertBtnConfirm">Bestätigen</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/platform.js"></script>
+    <script src="../js/test-gen.js"></script>
+    <script src="../js/test.js"></script>
+  </body>
+</html>
