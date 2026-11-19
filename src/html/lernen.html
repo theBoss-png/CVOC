@@ -197,20 +197,21 @@
           <div class="help-block">
             <div class="help-heading">Mindestabstand</div>
             <p>
-              So viele andere Wörter sollen zwischen zwei Abfragen desselben
-              Wortes liegen. Dasselbe Wort kommt nie zweimal direkt
-              hintereinander. Ist der Bucket kleiner als der Abstand, wird der
-              Abstand so gut wie möglich eingehalten.
+              So viele andere Wörter liegen mindestens zwischen zwei Abfragen
+              desselben Wortes. Bleiben gegen Ende weniger offene Wörter übrig,
+              werden bereits gelernte zur Auffrischung dazwischengeschoben,
+              damit der Abstand trotzdem hält.
             </p>
           </div>
 
           <div class="help-block">
             <div class="help-heading">Härte des Abstands</div>
             <p>
-              Wie streng der Mindestabstand gilt. 0: gar nicht, nur die
-              Wiederholung direkt hintereinander ist ausgeschlossen. Hohe Werte:
-              Kürzlich gefragte Wörter kommen fast nie vor Ablauf des
-              Abstands.
+              0: Mindestabstand aus, nur die Wiederholung direkt hintereinander
+              ist ausgeschlossen. Ab 0.5 gilt der Mindestabstand strikt; die
+              Härte bestimmt dann, wie langsam ein Wort danach wieder auf volle
+              Wahrscheinlichkeit kommt. Hoch = Wörter verteilen sich
+              gleichmässiger.
             </p>
           </div>
 
@@ -410,8 +411,8 @@
               step="1"
             />
             <div class="setting-hint">
-              So viele andere Wörter sollen zwischen zwei Wiederholungen
-              liegen. Direkt hintereinander kommt ein Wort nie.
+              So viele andere Wörter liegen mindestens zwischen zwei
+              Wiederholungen desselben Wortes.
             </div>
           </div>
 
@@ -429,8 +430,8 @@
               step="0.5"
             />
             <div class="setting-hint">
-              0 = Abstand egal, hoch = kürzlich gefragte Wörter werden fast
-              vollständig unterdrückt.
+              0 = Mindestabstand aus. Sonst gilt er strikt; höher = Wörter
+              kommen danach langsamer wieder.
             </div>
           </div>
 

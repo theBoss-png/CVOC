@@ -8,9 +8,10 @@
    2. Aus dem Pool wird ein "Bucket" (aktives Lernfenster) gefüllt.
    3. Gefragt wird immer nur aus dem Bucket – per gewichtetem
       Würfeln: schlecht gekonnte Wörter haben mehr Gewicht.
-   4. Kürzlich gefragte Wörter bekommen einen Wahrscheinlichkeits-
-      Malus (0 für das direkt vorherige Wort), damit zwischen zwei
-      Wiederholungen möglichst `minGap` andere Wörter liegen.
+   4. Zwischen zwei Abfragen desselben Wortes liegen mindestens
+      `minGap` andere Wörter (harte Sperre, solange der Bucket gross
+      genug ist). Danach kommt ein Wort über einen sanften Malus
+      langsam wieder auf volles Gewicht.
    5. Sobald ein Wort gelernt ist, verlässt es den Bucket und wird
       sofort durch ein neues aus dem Pool ersetzt (fliessender
       Übergang – der Bucket bleibt immer gleich voll).
@@ -209,16 +210,17 @@ function refillBucket(protectedIndex = -1) {
     }
   }
 
-  // Endspurt: bleibt nur noch ein Wort übrig, käme es sonst direkt
-  // hintereinander dran. Darum werden bereits gelernte Wörter als
-  // Auffrischung dazugeholt (sie haben minimales Gewicht und tauchen
-  // deshalb nur selten auf).
-  if (bucket.length < 2 && pool.length === 0) {
+  // Endspurt: bleiben weniger Wörter übrig, als der Mindestabstand
+  // braucht, kämen sie zu schnell wieder dran. Darum werden bereits
+  // gelernte Wörter als Auffrischung dazugeholt, bis der Abstand
+  // wieder eingehalten werden kann.
+  const minBucket = Math.min(cfg.bucketSize, requiredDistance());
+  if (bucket.length < minBucket && pool.length === 0) {
     const fillers = questions
       .map((_, i) => i)
       .filter((i) => !bucket.includes(i) && isMastered(questions[i]))
       .sort((a, b) => questions[b].amount - questions[a].amount);
-    while (bucket.length < 2 && fillers.length) bucket.push(fillers.shift());
+    while (bucket.length < minBucket && fillers.length) bucket.push(fillers.shift());
   }
 }
 
@@ -233,19 +235,48 @@ function baseWeight(q) {
   return Math.pow(level, cfg.weightExponent);
 }
 
-// Abstands-Malus: 0 für das direkt zuvor gefragte Wort, danach
-// steigt der Faktor bis `minGap` wieder auf 1.
-function recencyFactor(idx) {
+// Abstand zum letzten Auftritt: 1 = direkt zuvor gefragt,
+// es liegen also (distance - 1) andere Wörter dazwischen.
+function distanceSince(idx) {
   const pos = recent.lastIndexOf(idx);
-  if (pos === -1) return 1;
-  const distance = recent.length - pos; // 1 = zuletzt gefragt
-  if (distance > cfg.minGap) return 1;
-  if (distance === 1) return 0;
-  return Math.pow(distance / (cfg.minGap + 1), cfg.recencyStrength);
+  return pos === -1 ? Infinity : recent.length - pos;
+}
+
+// Kleinster erlaubter Abstand. Bei Härte 0 wird nur die direkte
+// Wiederholung verhindert, sonst gilt der Mindestabstand strikt.
+function requiredDistance() {
+  if (cfg.recencyStrength <= 0) return 2;
+  return Math.max(2, cfg.minGap + 1);
+}
+
+// Sanfter Malus NACH dem Mindestabstand: Wörter, die die Sperre
+// gerade erst verlassen haben, kommen über weitere `minGap` Wörter
+// langsam wieder auf volles Gewicht. Die Härte bestimmt, wie stark.
+function recencyFactor(idx) {
+  const distance = distanceSince(idx);
+  if (distance === Infinity || cfg.recencyStrength <= 0 || cfg.minGap <= 0) return 1;
+  const since = distance - requiredDistance() + 1; // 1 = gerade freigegeben
+  if (since > cfg.minGap) return 1;
+  return Math.pow(since / (cfg.minGap + 1), cfg.recencyStrength);
 }
 
 function weightFor(idx) {
   return baseWeight(questions[idx]) * recencyFactor(idx);
+}
+
+function weightedPick(candidates, weightOf) {
+  let weights = candidates.map(weightOf);
+  let total = weights.reduce((a, b) => a + b, 0);
+  if (!(total > 0)) {
+    weights = candidates.map(() => 1);
+    total = candidates.length;
+  }
+  let roll = Math.random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
 }
 
 function chooseNext() {
@@ -254,34 +285,23 @@ function chooseNext() {
   if (bucket.length === 0) return null;
   if (bucket.length === 1) return bucket[0];
 
-  let weights = bucket.map(weightFor);
-  let total = weights.reduce((a, b) => a + b, 0);
+  // 1. Nur Wörter, die den Mindestabstand einhalten.
+  const need = requiredDistance();
+  const allowed = bucket.filter((i) => distanceSince(i) >= need);
+  if (allowed.length) return weightedPick(allowed, weightFor);
 
-  // Falls der Abstands-Malus alles auf 0 drückt: ohne Malus würfeln.
-  if (total <= 0) {
-    weights = bucket.map((i) => baseWeight(questions[i]));
-    total = weights.reduce((a, b) => a + b, 0);
-  }
-  if (total <= 0) {
-    weights = bucket.map(() => 1);
-    total = bucket.length;
-  }
-
-  let roll = Math.random() * total;
-  let chosen = bucket[bucket.length - 1];
-  for (let i = 0; i < bucket.length; i++) {
-    roll -= weights[i];
-    if (roll <= 0) {
-      chosen = bucket[i];
-      break;
-    }
-  }
-  return chosen;
+  // 2. Bucket zu klein für den Abstand (z. B. im Endspurt): das Wort
+  //    nehmen, das am längsten nicht dran war – so bleibt der Abstand
+  //    so gross wie möglich.
+  const longest = Math.max(...bucket.map(distanceSince));
+  const oldest = bucket.filter((i) => distanceSince(i) === longest);
+  return weightedPick(oldest, (i) => baseWeight(questions[i]));
 }
 
 function rememberShown(idx) {
   recent.push(idx);
-  const keep = Math.max(cfg.minGap, 1) + 2;
+  // Sperre + Ausklingzone müssen im Gedächtnis bleiben.
+  const keep = Math.max(cfg.minGap, 1) * 2 + 3;
   while (recent.length > keep) recent.shift();
 }
 
