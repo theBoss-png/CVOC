@@ -16,6 +16,9 @@ const CvocQuizlet = (() => {
   // Reihenfolge = Vorrang bei gleichem Trefferanteil.
   const TERM_SEPARATORS = [
     { id: "tab", label: "Tabulator", value: "\t" },
+    // Kopierte Quizlet-Liste: Begriff und Definition je auf einer Zeile,
+    // Karten durch Leerzeilen getrennt (passt nur zu "Leerzeile").
+    { id: "newline", label: "Zeilenumbruch", value: "\n" },
     { id: "semicolon", label: "Semikolon", value: ";" },
     { id: "dash", label: "Bindestrich", value: " - " },
     { id: "endash", label: "Gedankenstrich", value: " – " },
@@ -38,6 +41,15 @@ const CvocQuizlet = (() => {
   // ----------------- Hilfen -----------------
   function normalizeNewlines(text) {
     return String(text == null ? "" : text).replace(/\r\n?/g, "\n");
+  }
+
+  // Fusszeile, die beim Kopieren der Begriffsliste von quizlet.com
+  // mitkommt, z. B. "Total: 84 Begriffe" oder "Insgesamt: 84 Begriffe".
+  const FOOTER_RE =
+    /^\s*(total|insgesamt|gesamt|terms in this set)\s*:?\s*\(?\d+\)?\s*(begriffe?|terms?|karten)?\s*$/gim;
+
+  function stripQuizletFooter(text) {
+    return text.replace(FOOTER_RE, "");
   }
 
   // Nur am ERSTEN Vorkommen trennen: "Haus, house, home" wird dann
@@ -82,7 +94,7 @@ const CvocQuizlet = (() => {
       options || {}
     );
 
-    const raw = normalizeNewlines(text);
+    const raw = stripQuizletFooter(normalizeNewlines(text));
     const pairs = [];
     let skippedNoSeparator = 0;
     let skippedEmpty = 0;
@@ -107,8 +119,8 @@ const CvocQuizlet = (() => {
           : raw.split(o.cardSep);
 
       for (const record of records) {
-        // Bei Leerzeilen-Trennung dürfen Felder selbst Umbrüche haben.
-        const flat = o.cardSep === "\n\n" ? record : record;
+        // Rand-Umbrüche weg, sonst trennt "Zeilenumbruch" am falschen Ende.
+        const flat = o.termSep === "\n" ? record.replace(/^\s*\n|\n\s*$/g, "") : record;
         if (!flat.trim()) continue;
         const split = splitOnce(flat, o.termSep);
         if (!split) {
@@ -164,7 +176,7 @@ const CvocQuizlet = (() => {
   }
 
   function detect(text) {
-    const raw = normalizeNewlines(text);
+    const raw = stripQuizletFooter(normalizeNewlines(text));
     if (!raw.trim()) {
       return { mode: "separator", termSep: "\t", cardSep: "\n", confident: false };
     }
@@ -172,6 +184,8 @@ const CvocQuizlet = (() => {
     let best = null;
     for (const card of CARD_SEPARATORS) {
       for (const term of TERM_SEPARATORS) {
+        // Zeilenumbruch als Begriffstrenner ergibt nur mit Leerzeilen Sinn.
+        if (term.value === "\n" && card.value !== "\n\n") continue;
         const s = score(raw, "separator", term.value, card.value);
         if (s.ratio < 0.6 || s.count < 1) continue;
         const candidate = {
@@ -188,10 +202,10 @@ const CvocQuizlet = (() => {
       }
     }
 
-    // Abwechselnde Zeilen: nur wenn kein Trennzeichen überzeugt hat
-    // und eine gerade Zeilenzahl vorliegt.
+    // Abwechselnde Zeilen: bei gerader Zeilenzahl, wenn sie mehr
+    // Karten ergeben als das beste Trennzeichen.
     const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
-    if ((!best || best.ratio < 0.9) && lines.length >= 4 && lines.length % 2 === 0) {
+    if (lines.length >= 4 && lines.length % 2 === 0) {
       const s = score(raw, "alternating", "\t", "\n");
       if (!best || s.count > best.count) {
         best = {
