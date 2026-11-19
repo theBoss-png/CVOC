@@ -652,25 +652,39 @@ const CvocTest = (() => {
     return Math.min(6, Math.max(1, Math.round(value / step) * step));
   }
 
-  // Genauigkeit: Wie sicher ist die Note bei so wenigen Punkten?
-  // Agresti-Coull-Intervall (95 %) für den Anteil richtiger Antworten,
-  // umgerechnet auf die Notenskala. Mehr Punkte = schmaleres Intervall.
-  function gradeRange(points, max, scale) {
+  // Genauigkeit: Wie sicher ist die Note?
+  // Der Test ist eine Stichprobe aus den Wörtern des Sets. Agresti-Coull-
+  // Intervall (95 %) für den Anteil richtiger Antworten, mit Endlichkeits-
+  // korrektur: je grösser der Anteil der abgefragten Wörter, desto enger.
+  // Kommen alle Wörter dran, gibt es nichts mehr zu schätzen -> exakt.
+  //   coverage = { covered: abgefragte Wörter, population: Wörter im Set }
+  function gradeRange(points, max, scale, coverage) {
     const s = Object.assign({ fullAt: 100, rounding: 0.5 }, scale || {});
-    if (!max) return { low: 1, high: 6, plusMinus: 2.5 };
+    if (!max) return { low: 1, high: 6, plusMinus: 2.5, exact: 1, complete: false };
     const z = 1.96;
     const n = max + z * z;
     const p = (points + (z * z) / 2) / n;
-    const half = z * Math.sqrt((p * (1 - p)) / n);
+    let half = z * Math.sqrt((p * (1 - p)) / n);
+
+    let complete = false;
+    if (coverage && coverage.population > 0) {
+      const N = coverage.population;
+      const covered = Math.min(coverage.covered, N);
+      complete = covered >= N;
+      const fpc = N > 1 ? Math.sqrt(Math.max(0, N - covered) / (N - 1)) : 0;
+      half *= fpc;
+    }
+
     const toGrade = (share) => Math.min(6, Math.max(1, 1 + (5 * share * 100) / s.fullAt));
     const exact = toGrade(points / max);
     const low = toGrade(Math.max(0, points / max - half));
     const high = toGrade(Math.min(1, points / max + half));
     return {
-      low: Math.round(low * 10) / 10,
-      high: Math.round(high * 10) / 10,
-      plusMinus: Math.round(((high - low) / 2) * 10) / 10,
+      low: Math.round(low * 100) / 100,
+      high: Math.round(high * 100) / 100,
+      plusMinus: Math.round(((high - low) / 2) * 100) / 100,
       exact: Math.round(exact * 100) / 100,
+      complete,
     };
   }
 

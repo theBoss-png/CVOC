@@ -126,6 +126,14 @@ function formatTime(ms) {
   return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
+function wordCount() {
+  return CvocTest.maxQuestions(quiz.cards, ["write"]);
+}
+
+function formatPlusMinus(v) {
+  return v > 0 && v < 0.1 ? v.toFixed(2) : v.toFixed(1);
+}
+
 function scale() {
   return { fullAt: settings.fullAt, rounding: settings.rounding };
 }
@@ -176,10 +184,17 @@ function updateCountLabel() {
   const n = settings.count;
   $("countValue").textContent = n === 1 ? "1 Punkt" : `${n} Punkte`;
   // Vorschau der Genauigkeit bei einem typischen Ergebnis von 75 %.
-  const r = CvocTest.gradeRange(Math.round(n * 0.75), n, scale());
+  // Der Test fragt zuerst jedes Wort einmal ab, bevor sich eines wiederholt.
+  const words = wordCount();
+  const r = CvocTest.gradeRange(Math.round(n * 0.75), n, scale(), {
+    covered: Math.min(n, words),
+    population: words,
+  });
   const perCard = activeTypes().length > 1 ? " Jede Karte kommt pro Frageart höchstens einmal." : "";
   $("countHint").textContent =
-    `Bei ${n} Punkten ist die Note etwa auf ± ${r.plusMinus.toFixed(1)} genau – je mehr Punkte, desto genauer.` +
+    (r.complete
+      ? `Bei ${n} Punkten kommen alle ${words} Wörter dran – die Note ist dann exakt (bei gleichem Aufbau und Notenspiegel).`
+      : `Bei ${n} von ${words} Wörtern ist die Note etwa auf ± ${formatPlusMinus(r.plusMinus)} genau – je mehr Wörter, desto genauer.`) +
     perCard;
 }
 
@@ -381,7 +396,11 @@ function finish() {
 
   const result = CvocTest.summarize(questions, responses, settings.check);
   const g = CvocTest.grade(result.points, result.max, scale());
-  const range = CvocTest.gradeRange(result.points, result.max, scale());
+  const covered = new Set(questions.map((q) => q.cardIndex)).size;
+  const range = CvocTest.gradeRange(result.points, result.max, scale(), {
+    covered,
+    population: wordCount(),
+  });
 
   const before = historyFor(setName());
   const entry = {
@@ -427,10 +446,18 @@ function finish() {
   }
 
   // Genauigkeit
-  $("accValue").textContent = `± ${range.plusMinus.toFixed(1)}`;
-  $("accSub").textContent =
-    `Deine Note liegt mit 95 % Sicherheit zwischen ${range.low.toFixed(1)} und ${range.high.toFixed(1)}. ` +
-    `Ungerundet: ${range.exact.toFixed(2)}. Mehr Punkte machen sie genauer.`;
+  if (range.complete) {
+    $("accValue").textContent = "exakt";
+    $("accSub").textContent =
+      `Alle ${wordCount()} Wörter wurden abgefragt. Bei gleichem Aufbau und Notenspiegel ` +
+      `wäre das genau deine Note (ungerundet ${range.exact.toFixed(2)}).`;
+  } else {
+    $("accValue").textContent = `± ${formatPlusMinus(range.plusMinus)}`;
+    $("accSub").textContent =
+      `${covered} von ${wordCount()} Wörtern abgefragt. Deine Note liegt mit 95 % Sicherheit ` +
+      `zwischen ${range.low.toFixed(2)} und ${range.high.toFixed(2)} (ungerundet ${range.exact.toFixed(2)}). ` +
+      `Je mehr Wörter, desto genauer.`;
+  }
 
   // Zeit
   $("timeValue").textContent = formatTime(duration);
