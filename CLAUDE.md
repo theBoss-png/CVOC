@@ -31,6 +31,7 @@ Remote: `origin` → https://github.com/theBoss-png/CVOC, Branch `main`.
 - Nach jeder abgeschlossenen, funktionierenden Änderung selbständig committen und auf `main` pushen (`git push origin main`) – ohne vorher nachzufragen.
 - Vor dem Push `git pull --rebase origin main`, falls das Remote neuer ist.
 - Commit-Messages kurz, auf Deutsch, im Imperativ (z. B. „Anki-Import: Medien überspringen“).
+- Bei jedem Update die Versionsnummer um 0.0.1 erhöhen (Patch-Stelle, z. B. 1.2.0 → 1.2.1) und im selben Commit mitliefern. Die Version steht an drei Stellen: `package.json`, `package-lock.json` (per `npm version <x.y.z> --no-git-tag-version`) und `APP_VERSION` in `src/js/platform.js`.
 - Nie committen: `node_modules/`, `web/`, `cvoc-web.zip`, `.wrangler/`, Secrets oder API-Tokens.
 - Kein `git push --force`, kein Umschreiben der History auf `main`.
 - Jeder Push auf `main` deployt die Web-Version automatisch über GitHub Actions (`.github/workflows/deploy.yml`) zu Cloudflare. Deshalb nur funktionierenden Code pushen; vorher `npm run build:web` laufen lassen.
