@@ -134,6 +134,9 @@ let currentQuizName = null;
 let bucket = []; // Indizes im aktiven Lernfenster
 let pool = []; // Indizes, die noch warten
 let recent = []; // zuletzt gefragte Indizes (ältestes zuerst)
+const fillers = new Set(); // gelernte Wörter, die im Endspurt als Wiederholung im Bucket sind
+const usedFillers = new Set(); // Wiederholungen, die schon dran waren (für die Rotation)
+let beforeWrong = null; // Stand vor der Falschbewertung, für "Meine Antwort war richtig"
 let currentQuestion = 0;
 let retyping = false; // falsch beantwortet, Lösung muss abgetippt werden
 let finished = false;
@@ -181,6 +184,8 @@ function initSession() {
   pool = order.filter((i) => !isMastered(questions[i]));
   bucket = [];
   recent = [];
+  fillers.clear();
+  usedFillers.clear();
   finished = false;
   refillBucket();
 }
@@ -189,20 +194,35 @@ function initSession() {
 // neue aus dem Pool nach – und bei verkleinerter Bucketgrösse
 // wandern die überzähligen (nie das aktuelle Wort) zurück in den Pool.
 function refillBucket(protectedIndex = -1) {
+  // Falsch beantwortete Wiederholungen sind wieder echte Lernwörter.
+  for (const f of [...fillers]) {
+    if (!isMastered(questions[f]) || !bucket.includes(f)) fillers.delete(f);
+  }
+
   bucket = bucket.filter(
-    (i) => !isMastered(questions[i]) || i === protectedIndex
+    (i) => !isMastered(questions[i]) || fillers.has(i) || i === protectedIndex
   );
+  // Gibt es wieder Wörter im Pool, haben die Vorrang vor Wiederholungen.
+  if (pool.length > 0) {
+    bucket = bucket.filter((i) => !fillers.has(i) || i === protectedIndex);
+    fillers.clear();
+  }
 
   while (bucket.length > cfg.bucketSize) {
-    let removeAt = -1;
-    for (let k = bucket.length - 1; k >= 0; k--) {
-      if (bucket[k] !== protectedIndex) {
-        removeAt = k;
-        break;
+    // Zuerst Wiederholungen entfernen, dann von hinten echte Wörter.
+    let removeAt = bucket.findIndex((i) => fillers.has(i) && i !== protectedIndex);
+    if (removeAt === -1) {
+      for (let k = bucket.length - 1; k >= 0; k--) {
+        if (bucket[k] !== protectedIndex) {
+          removeAt = k;
+          break;
+        }
       }
     }
     if (removeAt === -1) break;
-    pool.unshift(bucket.splice(removeAt, 1)[0]);
+    const removed = bucket.splice(removeAt, 1)[0];
+    if (fillers.has(removed)) fillers.delete(removed);
+    else pool.unshift(removed);
   }
 
   while (bucket.length < cfg.bucketSize && pool.length > 0) {
@@ -212,17 +232,38 @@ function refillBucket(protectedIndex = -1) {
     }
   }
 
-  // Endspurt: bleiben weniger Wörter übrig, als der Mindestabstand
-  // braucht, kämen sie zu schnell wieder dran. Darum werden bereits
-  // gelernte Wörter als Auffrischung dazugeholt, bis der Abstand
-  // wieder eingehalten werden kann.
-  const minBucket = Math.min(cfg.bucketSize, requiredDistance());
-  if (bucket.length < minBucket && pool.length === 0) {
-    const fillers = questions
+  // Endspurt: Ist der Pool leer und der Bucket nicht mehr voll, werden
+  // zufällig bereits gelernte Wörter als Wiederholung dazugeholt. Wer
+  // eine Wiederholung richtig beantwortet, fällt wieder raus und macht
+  // Platz für eine neue – so rotieren die Wiederholungen durch, bis die
+  // letzten echten Wörter sitzen. Wird eine Wiederholung falsch
+  // beantwortet, gilt sie nicht mehr als gelernt und bleibt drin.
+  if (pool.length === 0) {
+    const free = questions
       .map((_, i) => i)
-      .filter((i) => !bucket.includes(i) && isMastered(questions[i]))
-      .sort((a, b) => questions[b].amount - questions[a].amount);
-    while (bucket.length < minBucket && fillers.length) bucket.push(fillers.shift());
+      .filter((i) => !bucket.includes(i) && isMastered(questions[i]));
+    let fresh = free.filter((i) => !usedFillers.has(i));
+    if (fresh.length === 0 && free.length > 0) {
+      usedFillers.clear(); // alle einmal dran gewesen – neue Runde
+      fresh = free;
+    }
+    shuffle(fresh);
+    // Zuletzt gefragte Wörter erst am Schluss nachziehen.
+    fresh.sort((a, b) => (distanceSince(a) === Infinity ? 0 : 1) - (distanceSince(b) === Infinity ? 0 : 1));
+    while (bucket.length < cfg.bucketSize && fresh.length) {
+      const f = fresh.shift();
+      bucket.push(f);
+      fillers.add(f);
+    }
+  }
+}
+
+// Wiederholung richtig beantwortet: raus aus dem Bucket (beim nächsten
+// Auffüllen), damit eine andere nachrückt.
+function retireFiller(idx) {
+  if (fillers.has(idx) && isMastered(questions[idx])) {
+    fillers.delete(idx);
+    usedFillers.add(idx);
   }
 }
 
@@ -348,7 +389,8 @@ function updateProgressBar() {
   if (bucketInfoEl) {
     bucketInfoEl.textContent = finished
       ? ""
-      : `Bucket ${bucket.length} · Warteschlange ${pool.length}`;
+      : `Bucket ${bucket.length} · Warteschlange ${pool.length}` +
+        (fillers.size ? ` · Wiederholung ${fillers.size}` : "");
   }
 }
 
@@ -375,6 +417,7 @@ function checkAnswer() {
       nextBtn.style.display = "block";
     }
   } else {
+    beforeWrong = { index: currentQuestion, amount: q.amount, streak: q.streak || 0 };
     q.streak = 0;
     q.amount = Math.min(cfg.maxAmount, q.amount + cfg.wrongStep);
     answerInput.classList.add("incorrect");
@@ -650,6 +693,7 @@ function diffBlock(attempt, correct) {
 function applyCorrect(q) {
   q.streak = (q.streak || 0) + 1;
   q.amount = Math.max(cfg.minAmount, q.amount - cfg.rightStep);
+  retireFiller(questions.indexOf(q));
 }
 
 function overrideAnswer() {
@@ -657,9 +701,15 @@ function overrideAnswer() {
   retyping = false;
   checkBtn.style.display = "none";
   answerInput.disabled = true;
-  // Falschbewertung zurücknehmen …
-  q.amount = Math.min(cfg.maxAmount, Math.max(cfg.minAmount, q.amount - cfg.wrongStep));
-  // … und als richtig werten.
+  // Falschbewertung vollständig zurücknehmen (Stand UND Serie) …
+  if (beforeWrong && beforeWrong.index === currentQuestion) {
+    q.amount = beforeWrong.amount;
+    q.streak = beforeWrong.streak;
+  } else {
+    q.amount = Math.min(cfg.maxAmount, Math.max(cfg.minAmount, q.amount - cfg.wrongStep));
+  }
+  beforeWrong = null;
+  // … und genau so werten, als wäre die Antwort richtig gewesen.
   applyCorrect(q);
 
   answerInput.classList.remove("incorrect");
