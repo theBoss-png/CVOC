@@ -386,7 +386,7 @@ function checkAnswer() {
     if (cfg.retypeWrong) {
       // Weiter geht es erst, wenn die Lösung einmal richtig abgetippt ist.
       retyping = true;
-      feedback.innerHTML += "<br>Tippe die richtige Antwort ab, um weiterzumachen.";
+      feedback.innerHTML = retypeFeedback("✗ Falsch!", userAnswer, correct);
       updateProgressBar();
       saveQuiz();
       answerInput.value = "";
@@ -410,7 +410,7 @@ function checkRetype(userAnswer, correct) {
     void answerInput.offsetWidth; // Rot-Markierung neu auslösen
     answerInput.classList.add("incorrect");
     feedback.className = "feedback incorrect";
-    feedback.innerHTML = `✗ Noch nicht richtig | Richtige Antwort: ${escapeHtml(correct)}`;
+    feedback.innerHTML = retypeFeedback("✗ Noch nicht richtig", userAnswer, correct);
     answerInput.select();
     return;
   }
@@ -428,6 +428,21 @@ function checkRetype(userAnswer, correct) {
   } else {
     nextBtn.style.display = "block";
   }
+}
+
+// Zeigt beim Abtippen weiter an, was zuletzt falsch geschrieben wurde,
+// damit man den Fehler mit der Lösung vergleichen kann.
+function retypeFeedback(title, attempt, correct) {
+  return (
+    `<div>${title}</div>` +
+    `<div class="retype-compare">` +
+    `<div class="retype-row"><span class="retype-label">Du hast geschrieben</span>` +
+    `<span class="retype-wrong">${escapeHtml(attempt)}</span></div>` +
+    `<div class="retype-row"><span class="retype-label">Richtig ist</span>` +
+    `<span class="retype-right">${escapeHtml(correct)}</span></div>` +
+    `</div>` +
+    `<div class="retype-hint">Tippe die richtige Antwort ab, um weiterzumachen.</div>`
+  );
 }
 
 function escapeHtml(text) {

@@ -523,6 +523,53 @@ body::-webkit-scrollbar {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(244, 67, 54, 0.3);
 }
 
+.retype-compare {
+  margin: 12px auto 0;
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  gap: 6px;
+  text-align: left;
+}
+
+.retype-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.retype-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #b0a8a8;
+  min-width: 130px;
+}
+
+.retype-wrong,
+.retype-right {
+  font-size: 17px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.retype-wrong {
+  color: #f44336;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.retype-right {
+  color: #4caf50;
+}
+
+.retype-hint {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #d8cfcf;
+}
+
 .correct-answer {
   margin-top: 10px;
   font-weight: 700;
