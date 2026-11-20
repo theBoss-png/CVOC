@@ -66,7 +66,87 @@ function updateCardNumbers() {
         const deleteBtn = card.querySelector(".delete-card-btn");
         deleteBtn.setAttribute("onclick", `deleteCard(${index})`);
     });
+    checkDuplicates();
 }
+
+// ----------------- Doppelte Wörter -----------------
+// Gleiche Begriffe oder gleiche Definitionen werden markiert.
+// Gross-/Kleinschreibung und Leerzeichen spielen keine Rolle.
+// Speichern bleibt möglich, es gibt nur eine Warnung.
+function dupKey(text) {
+    return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function findDuplicates() {
+    const cards = [...document.querySelectorAll(".card")];
+    const groups = [];
+    [0, 1].forEach((col) => {
+        const seen = new Map(); // Wert -> Kartennummern
+        cards.forEach((card, i) => {
+            const input = card.querySelectorAll(".card-input")[col];
+            const key = input ? dupKey(input.value) : '';
+            if (!key) return;
+            if (!seen.has(key)) seen.set(key, []);
+            seen.get(key).push(i);
+        });
+        seen.forEach((idxs) => {
+            if (idxs.length > 1) {
+                groups.push({ col, cards: idxs, text: cards[idxs[0]].querySelectorAll(".card-input")[col].value.trim() });
+            }
+        });
+    });
+    return groups;
+}
+
+function checkDuplicates() {
+    const cards = [...document.querySelectorAll(".card")];
+    cards.forEach((card) => {
+        card.classList.remove("card-duplicate");
+        card.querySelectorAll(".card-input").forEach((input) => {
+            input.classList.remove("duplicate");
+            input.removeAttribute("title");
+        });
+        card.querySelectorAll(".dup-hint").forEach((el) => el.remove());
+    });
+
+    const groups = findDuplicates();
+    groups.forEach(({ col, cards: idxs }) => {
+        idxs.forEach((i) => {
+            const card = cards[i];
+            const input = card.querySelectorAll(".card-input")[col];
+            const others = idxs.filter((j) => j !== i).map((j) => j + 1);
+            const label = col === 0 ? 'Begriff' : 'Definition';
+            const msg = `${label} doppelt – auch in Karte ${others.join(', ')}`;
+            card.classList.add("card-duplicate");
+            input.classList.add("duplicate");
+            input.title = msg;
+            const hint = document.createElement("div");
+            hint.className = "dup-hint";
+            hint.textContent = msg;
+            input.parentElement.appendChild(hint);
+        });
+    });
+
+    let banner = document.getElementById("dupBanner");
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "dupBanner";
+        banner.className = "dup-banner";
+        const container = document.getElementById("cardsContainer");
+        container.parentElement.insertBefore(banner, container);
+    }
+    if (groups.length) {
+        banner.textContent = `⚠️ ${groups.length === 1 ? '1 doppelter Eintrag' : groups.length + ' doppelte Einträge'} – die betroffenen Karten sind rot markiert.`;
+        banner.style.display = 'block';
+    } else {
+        banner.style.display = 'none';
+    }
+    return groups;
+}
+
+document.addEventListener('input', (e) => {
+    if (e.target.classList && e.target.classList.contains('card-input')) checkDuplicates();
+});
 
 function switchAllCards() {
     const cards = document.querySelectorAll(".card");
@@ -79,6 +159,7 @@ function switchAllCards() {
         begriffInput.value = definitionInput.value;
         definitionInput.value = temp;
     });
+    checkDuplicates();
 }
 
 function collectData() {
@@ -124,6 +205,28 @@ function collectData() {
 async function createSet() {
     const data = collectData();
     if (!data) return;
+
+    const dups = checkDuplicates();
+    if (dups.length) {
+        const list = dups
+            .map((d) => `${d.col === 0 ? 'Begriff' : 'Definition'} „${d.text}“ (Karten ${d.cards.map((i) => i + 1).join(', ')})`)
+            .join('\n');
+        const goOn = await customAlert({
+            title: 'Doppelte Wörter',
+            icon: '⚠️',
+            message: `Diese Einträge kommen mehrfach vor:\n${list}\n\nTrotzdem speichern?`,
+            confirmText: 'Trotzdem speichern',
+            cancelText: 'Zurück'
+        });
+        if (!goOn) {
+            const first = document.querySelector('.card-input.duplicate');
+            if (first) {
+                first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                first.focus({ preventScroll: true });
+            }
+            return;
+        }
+    }
 
     // Prüfe ob ein Quiz mit diesem Namen bereits existiert
     const existingIndex = savedQuizzes.findIndex(q => q.name === data.name);
@@ -193,14 +296,19 @@ function loadExistingQuiz() {
                 <div class="card-inputs">
                     <div class="card-input-group">
                         <label class="input-label">Begriff</label>
-                        <input type="text" class="card-input" placeholder="Begriff eingeben" value="${card.question}" />
+                        <input type="text" class="card-input" placeholder="Begriff eingeben" />
                     </div>
                     <div class="card-input-group">
                         <label class="input-label">Definition</label>
-                        <input type="text" class="card-input" placeholder="Definition eingeben" value="${card.answer}" />
+                        <input type="text" class="card-input" placeholder="Definition eingeben" />
                     </div>
                 </div>
             `;
+            // Werte direkt setzen statt ins HTML zu schreiben – sonst brechen
+            // Anführungszeichen im Text das Eingabefeld.
+            const inputs = newCard.querySelectorAll(".card-input");
+            inputs[0].value = card.question;
+            inputs[1].value = card.answer;
             container.appendChild(newCard);
             
             // Speichere amount als data-attribute für später
@@ -210,6 +318,7 @@ function loadExistingQuiz() {
         });
         
         cardCount = quiz.cards.length;
+        checkDuplicates();
         
         // Quiz-Daten aus localStorage entfernen
         localStorage.removeItem('currentQuiz');
