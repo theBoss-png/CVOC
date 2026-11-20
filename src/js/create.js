@@ -202,6 +202,55 @@ function collectData() {
     };
 }
 
+// ----------------- Fortschritt beim Bearbeiten -----------------
+// Unveränderte Karten (gleicher Begriff + gleiche Definition) behalten ihren
+// Lernstand, auch wenn sie verschoben wurden. Neue oder geänderte Karten
+// beginnen wieder bei 5. Gibt die Anzahl zurückgesetzter Karten zurück.
+const LEARN_SETTINGS_KEY = "cvoc.lernen.settings";
+const LEARN_DEFAULTS = { minAmount: 2, maxAmount: 8 };
+
+function learnCfg() {
+    try {
+        return { ...LEARN_DEFAULTS, ...JSON.parse(localStorage.getItem(LEARN_SETTINGS_KEY) || '{}') };
+    } catch (e) {
+        return { ...LEARN_DEFAULTS };
+    }
+}
+
+function setPercent(cards) {
+    const c = learnCfg();
+    const n = cards.length;
+    if (!n) return 0;
+    const sum = cards.reduce((a, card) => a + (card.amount === undefined ? 5 : card.amount), 0);
+    const worst = c.maxAmount * n;
+    const best = c.minAmount * n;
+    if (worst === best) return 100;
+    return Math.round(((worst - sum) / (worst - best)) * 100);
+}
+
+function keepProgress(data, oldQuiz) {
+    // Pro Inhalt eine Liste alter Stände, damit auch doppelte Karten passen
+    const old = new Map();
+    (oldQuiz.cards || []).forEach((card) => {
+        const key = card.question.trim() + '\u0000' + card.answer.trim();
+        if (!old.has(key)) old.set(key, []);
+        old.get(key).push(card.amount === undefined ? 5 : card.amount);
+    });
+
+    let changed = 0;
+    data.cards.forEach((card) => {
+        const list = old.get(card.question + '\u0000' + card.answer);
+        if (list && list.length) {
+            card.amount = list.shift();
+        } else {
+            card.amount = 5;
+            changed++;
+        }
+    });
+    data.percent = setPercent(data.cards);
+    return changed;
+}
+
 async function createSet() {
     const data = collectData();
     if (!data) return;
@@ -232,20 +281,21 @@ async function createSet() {
     const existingIndex = savedQuizzes.findIndex(q => q.name === data.name);
     
     if (existingIndex !== -1) {
+        const changed = keepProgress(data, savedQuizzes[existingIndex]);
+
         // Quiz existiert bereits - Warnung anzeigen
         const confirmed = await customAlert({
             title: 'Lernset aktualisieren?',
             icon: '⚠️',
-            message: `Möchtest du das Lernset "${data.name}" aktualisieren? Du wirst deinen ganzen Fortschritt verlieren.`,
+            message: changed === 0
+                ? `Möchtest du das Lernset "${data.name}" aktualisieren? Dein Lernfortschritt bleibt erhalten.`
+                : `Möchtest du das Lernset "${data.name}" aktualisieren? Bei ${changed === 1 ? '1 neuen oder geänderten Karte' : changed + ' neuen oder geänderten Karten'} beginnt der Lernfortschritt von vorne, alle anderen behalten ihn.`,
             confirmText: 'Bestätigen',
             cancelText: 'Abbrechen'
         });
 
         if (!confirmed) return;
 
-        // Behalte den percent vom alten Quiz
-        data.percent = savedQuizzes[existingIndex].percent;
-        
         // Überschreibe das bestehende Quiz
         savedQuizzes[existingIndex] = data;
     } else {
